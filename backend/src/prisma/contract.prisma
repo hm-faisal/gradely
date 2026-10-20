@@ -1,0 +1,46 @@
+// use prisma-8
+enum Role {
+  STUDENT = "STUDENT"
+  ADMIN = "ADMIN"
+}
+
+enum SubmissionStatus {
+  PENDING = "PENDING"
+  APPROVED = "APPROVED"
+  REJECTED = "REJECTED"
+}
+
+model User {
+  id          String                     @id @default(uuid())
+  name        VarChar(255)
+  email       String                     @unique
+  password    String
+  role        Role                       @default(STUDENT)
+  submissions Submission[]               @relation("StudentSubmissions")
+  reviewed    Submission[]               @relation("ReviewedBy")
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+}
+
+model Submission {
+  id          String                     @id @default(uuid())
+  projectName VarChar(255)
+  repoUrl     String                     @unique
+  liveLink    String
+  description String
+  status      SubmissionStatus           @default(PENDING)
+  feedback    String?
+
+  studentId   String
+  student     User                       @relation("StudentSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
+
+  reviewerId  String?
+  reviewer    User?                      @relation("ReviewedBy", fields: [reviewerId], references: [id])
+  reviewedAt  TimestamptzString?
+
+  createdAt   TimestamptzString          @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  @@unique([studentId, projectName])
+  @@index([status, createdAt])
+}
