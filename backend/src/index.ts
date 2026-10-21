@@ -32,7 +32,7 @@ const bootstrap = async () => {
 		server = createServer(app);
 		server.listen(envConfig.PORT, "0.0.0.0", () => {
 			console.log(
-				`🚀 Server running at http://localhost:${envConfig.PORT} (env: ${envConfig.NODE_ENV})`,
+				`Server running at http://localhost:${envConfig.PORT} (env: ${envConfig.NODE_ENV})`,
 			);
 		});
 	} catch (error) {

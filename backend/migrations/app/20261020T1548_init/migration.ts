@@ -1,6 +1,6 @@
 #!/usr/bin/env -S node
-import type { Contract as End } from '../../snapshots/888e8deb5bfc41374d76769d27e76c2739ef2b3261861525555a94d7a9b214a9/contract';
-import endContract from '../../snapshots/888e8deb5bfc41374d76769d27e76c2739ef2b3261861525555a94d7a9b214a9/contract.json' with { type: 'json' };
+import type { Contract as End } from '../../snapshots/c483accf0de0f0be13e33e8533dc6a0a8a2a70eae5db6844f4651713214d621b/contract';
+import endContract from '../../snapshots/c483accf0de0f0be13e33e8533dc6a0a8a2a70eae5db6844f4651713214d621b/contract.json' with { type: 'json' };
 import {
   Migration,
   MigrationCLI,
@@ -71,6 +71,11 @@ export default class M extends Migration<never, End> {
             default: lit('STUDENT'),
             codecRef: { codecId: 'pg/text@1' },
           }),
+          col('status', 'text', {
+            notNull: true,
+            default: lit('ACTIVE'),
+            codecRef: { codecId: 'pg/text@1' },
+          }),
           col('updatedAt', 'timestamptz', {
             notNull: true,
             codecRef: { codecId: 'pg/timestamptz-string@1' },
@@ -79,6 +84,10 @@ export default class M extends Migration<never, End> {
         constraints: [
           primaryKey(['id']),
           checkExpression('User_role_check_482f18a5', `"role" IN ('STUDENT', 'ADMIN')`),
+          checkExpression(
+            'User_status_check_01c3a8a2',
+            `"status" IN ('ACTIVE', 'INACTIVE', 'BANNED', 'DELETED')`,
+          ),
         ],
       }),
       this.addUnique({

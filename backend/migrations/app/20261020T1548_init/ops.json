@@ -1,0 +1,424 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.Submission",
+    "label": "Create table \"Submission\"",
+    "summary": "Creates table \"Submission\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Submission\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Submission\"",
+        "sql": "CREATE TABLE \"public\".\"Submission\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text NOT NULL,\n  \"feedback\" text,\n  \"id\" text NOT NULL,\n  \"liveLink\" text NOT NULL,\n  \"projectName\" text NOT NULL,\n  \"repoUrl\" text NOT NULL,\n  \"reviewedAt\" timestamptz,\n  \"reviewerId\" text,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"studentId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Submission_status_check_56005a61\" CHECK (\"status\" IN ('PENDING', 'APPROVED', 'REJECTED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Submission\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.User",
+    "label": "Create table \"User\"",
+    "summary": "Creates table \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"User\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"User\"",
+        "sql": "CREATE TABLE \"public\".\"User\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"password\" text NOT NULL,\n  \"role\" text DEFAULT 'STUDENT' NOT NULL,\n  \"status\" text DEFAULT 'ACTIVE' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"User_role_check_482f18a5\" CHECK (\"role\" IN ('STUDENT', 'ADMIN')),\n  CONSTRAINT \"User_status_check_01c3a8a2\" CHECK (\"status\" IN ('ACTIVE', 'INACTIVE', 'BANNED', 'DELETED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"User\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Submission.Submission_repoUrl_key",
+    "label": "Add unique constraint on \"Submission\" (repoUrl)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Submission_repoUrl_key",
+        "table": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Submission_repoUrl_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_repoUrl_key",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Submission_repoUrl_key\"",
+        "sql": "ALTER TABLE \"public\".\"Submission\" ADD CONSTRAINT \"Submission_repoUrl_key\" UNIQUE (\"repoUrl\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Submission_repoUrl_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_repoUrl_key",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Submission.Submission_studentId_projectName_key",
+    "label": "Add unique constraint on \"Submission\" (studentId, projectName)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Submission_studentId_projectName_key",
+        "table": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Submission_studentId_projectName_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_studentId_projectName_key",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Submission_studentId_projectName_key\"",
+        "sql": "ALTER TABLE \"public\".\"Submission\" ADD CONSTRAINT \"Submission_studentId_projectName_key\" UNIQUE (\"studentId\", \"projectName\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Submission_studentId_projectName_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_studentId_projectName_key",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.User.User_email_key",
+    "label": "Add unique constraint on \"User\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "User_email_key",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"User_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_email_key",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"User_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD CONSTRAINT \"User_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"User_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_email_key",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Submission.Submission_reviewerId_idx_25a27b4e",
+    "label": "Create index \"Submission_reviewerId_idx_25a27b4e\" on \"Submission\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Submission_reviewerId_idx_25a27b4e",
+        "table": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Submission_reviewerId_idx_25a27b4e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission_reviewerId_idx_25a27b4e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Submission_reviewerId_idx_25a27b4e\"",
+        "sql": "CREATE INDEX \"Submission_reviewerId_idx_25a27b4e\" ON \"public\".\"Submission\" (\"reviewerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Submission_reviewerId_idx_25a27b4e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission_reviewerId_idx_25a27b4e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Submission.Submission_status_createdAt_idx_58610442",
+    "label": "Create index \"Submission_status_createdAt_idx_58610442\" on \"Submission\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Submission_status_createdAt_idx_58610442",
+        "table": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Submission_status_createdAt_idx_58610442\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission_status_createdAt_idx_58610442\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Submission_status_createdAt_idx_58610442\"",
+        "sql": "CREATE INDEX \"Submission_status_createdAt_idx_58610442\" ON \"public\".\"Submission\" (\"status\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Submission_status_createdAt_idx_58610442\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission_status_createdAt_idx_58610442\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Submission.Submission_studentId_idx_bf255322",
+    "label": "Create index \"Submission_studentId_idx_bf255322\" on \"Submission\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Submission_studentId_idx_bf255322",
+        "table": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Submission_studentId_idx_bf255322\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission_studentId_idx_bf255322\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Submission_studentId_idx_bf255322\"",
+        "sql": "CREATE INDEX \"Submission_studentId_idx_bf255322\" ON \"public\".\"Submission\" (\"studentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Submission_studentId_idx_bf255322\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Submission_studentId_idx_bf255322\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Submission.Submission_studentId_fkey",
+    "label": "Add foreign key \"Submission_studentId_fkey\" on \"Submission\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Submission_studentId_fkey",
+        "table": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Submission_studentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_studentId_fkey",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Submission_studentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Submission\"\nADD CONSTRAINT \"Submission_studentId_fkey\"\nFOREIGN KEY (\"studentId\")\nREFERENCES \"public\".\"User\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Submission_studentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_studentId_fkey",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Submission.Submission_reviewerId_fkey",
+    "label": "Add foreign key \"Submission_reviewerId_fkey\" on \"Submission\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Submission_reviewerId_fkey",
+        "table": "Submission"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Submission_reviewerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_reviewerId_fkey",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Submission_reviewerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Submission\"\nADD CONSTRAINT \"Submission_reviewerId_fkey\"\nFOREIGN KEY (\"reviewerId\")\nREFERENCES \"public\".\"User\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Submission_reviewerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Submission_reviewerId_fkey",
+          "public",
+          "\"public\".\"Submission\""
+        ]
+      }
+    ]
+  }
+]

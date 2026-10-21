@@ -4,6 +4,13 @@ enum Role {
   ADMIN = "ADMIN"
 }
 
+enum UserStatus {
+  ACTIVE = "ACTIVE"
+  INACTIVE = "INACTIVE"
+  BANNED = "BANNED"
+  DELETED = "DELETED"
+}
+
 enum SubmissionStatus {
   PENDING = "PENDING"
   APPROVED = "APPROVED"
@@ -12,10 +19,11 @@ enum SubmissionStatus {
 
 model User {
   id          String                     @id @default(uuid())
-  name        VarChar(255)
+  name        String
   email       String                     @unique
   password    String
   role        Role                       @default(STUDENT)
+  status      UserStatus                 @default(ACTIVE)
   submissions Submission[]               @relation("StudentSubmissions")
   reviewed    Submission[]               @relation("ReviewedBy")
   createdAt   TimestamptzString          @default(now())
@@ -24,7 +32,7 @@ model User {
 
 model Submission {
   id          String                     @id @default(uuid())
-  projectName VarChar(255)
+  projectName String
   repoUrl     String                     @unique
   liveLink    String
   description String

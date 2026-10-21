@@ -41,7 +41,7 @@
     "execute": [
       {
         "description": "create table \"Submission\"",
-        "sql": "CREATE TABLE \"public\".\"Submission\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text NOT NULL,\n  \"feedback\" text,\n  \"id\" text NOT NULL,\n  \"liveLink\" text NOT NULL,\n  \"projectName\" text NOT NULL,\n  \"repoUrl\" text NOT NULL,\n  \"reviewedAt\" timestamptz,\n  \"reviewerId\" text,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"studentId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Submission_status_check_56005a61\" CHECK (\"status\" IN ('PENDING', 'APPROVED', 'REJECTED'))\n)",
+        "sql": "CREATE TABLE \"public\".\"Submission\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text NOT NULL,\n  \"feedback\" text,\n  \"id\" text NOT NULL,\n  \"liveLink\" text NOT NULL,\n  \"projectName\" character varying(255) NOT NULL,\n  \"repoUrl\" text NOT NULL,\n  \"reviewedAt\" timestamptz,\n  \"reviewerId\" text,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"studentId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Submission_status_check_56005a61\" CHECK (\"status\" IN ('PENDING', 'APPROVED', 'REJECTED'))\n)",
         "params": []
       }
     ],
@@ -80,7 +80,7 @@
     "execute": [
       {
         "description": "create table \"User\"",
-        "sql": "CREATE TABLE \"public\".\"User\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"password\" text NOT NULL,\n  \"role\" text DEFAULT 'STUDENT' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"User_role_check_482f18a5\" CHECK (\"role\" IN ('STUDENT', 'ADMIN'))\n)",
+        "sql": "CREATE TABLE \"public\".\"User\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"password\" text NOT NULL,\n  \"role\" text DEFAULT 'STUDENT' NOT NULL,\n  \"status\" text DEFAULT 'ACTIVE' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"User_role_check_482f18a5\" CHECK (\"role\" IN ('STUDENT', 'ADMIN')),\n  CONSTRAINT \"User_status_check_01c3a8a2\" CHECK (\"status\" IN ('ACTIVE', 'INACTIVE', 'BANNED', 'DELETED'))\n)",
         "params": []
       }
     ],

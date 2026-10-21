@@ -18,7 +18,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'888e8deb5bfc41374d76769d27e76c2739ef2b3261861525555a94d7a9b214a9'>;
+  StorageHashBase<'c483accf0de0f0be13e33e8533dc6a0a8a2a70eae5db6844f4651713214d621b'>;
 export type ExecutionHash =
   ExecutionHashBase<'4c049b57cbca59c5e5e9e231e8ba08b44652fbd777b843a8c413ead1db5e5ec3'>;
 export type ProfileHash =
@@ -255,6 +255,7 @@ export type FieldOutputTypes = {
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly password: CodecTypes['pg/text@1']['output'];
       readonly role: 'STUDENT' | 'ADMIN';
+      readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
   };
@@ -282,6 +283,7 @@ export type FieldInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly password: CodecTypes['pg/text@1']['input'];
       readonly role: 'STUDENT' | 'ADMIN';
+      readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
   };
@@ -309,6 +311,7 @@ export type StorageColumnTypes = {
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly password: CodecTypes['pg/text@1']['output'];
       readonly role: 'STUDENT' | 'ADMIN';
+      readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
   };
@@ -336,6 +339,7 @@ export type StorageColumnInputTypes = {
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly password: CodecTypes['pg/text@1']['input'];
       readonly role: 'STUDENT' | 'ADMIN';
+      readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
   };
@@ -366,6 +370,7 @@ export namespace Models {
     name: CodecTypes['pg/text@1']['output'];
     password: CodecTypes['pg/text@1']['output'];
     role: 'STUDENT' | 'ADMIN';
+    status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     reviewed: public_Submission[];
     submissions: public_Submission[];
@@ -573,6 +578,16 @@ type ContractBase = Omit<
                   };
                   readonly many: false;
                 };
+                readonly status: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'ACTIVE'>;
+                  };
+                  readonly many: false;
+                };
                 readonly updatedAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -594,6 +609,10 @@ type ContractBase = Omit<
             readonly SubmissionStatus: {
               readonly kind: 'valueSet';
               readonly values: readonly ['PENDING', 'APPROVED', 'REJECTED'];
+            };
+            readonly UserStatus: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['ACTIVE', 'INACTIVE', 'BANNED', 'DELETED'];
             };
           };
         };
@@ -744,6 +763,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly updatedAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -786,6 +809,7 @@ type ContractBase = Omit<
                 readonly name: { readonly column: 'name' };
                 readonly password: { readonly column: 'password' };
                 readonly role: { readonly column: 'role' };
+                readonly status: { readonly column: 'status' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };
             };
@@ -805,6 +829,15 @@ type ContractBase = Omit<
               { readonly name: 'PENDING'; readonly value: 'PENDING' },
               { readonly name: 'APPROVED'; readonly value: 'APPROVED' },
               { readonly name: 'REJECTED'; readonly value: 'REJECTED' },
+            ];
+          };
+          readonly UserStatus: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'ACTIVE'; readonly value: 'ACTIVE' },
+              { readonly name: 'INACTIVE'; readonly value: 'INACTIVE' },
+              { readonly name: 'BANNED'; readonly value: 'BANNED' },
+              { readonly name: 'DELETED'; readonly value: 'DELETED' },
             ];
           };
         };

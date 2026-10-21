@@ -1,0 +1,550 @@
+{
+	"info": {
+		"_postman_id": "b6f1f0c2-8d4e-4a7b-9c1e-2f3a4b5c6d7e",
+		"name": "Gradely API",
+		"description": "Collection for the Gradely backend API.\n\n## Setup\n1. Start the API with `pnpm run dev` (default `http://localhost:5000`).\n2. Seed the admin account with `pnpm run db:seed`. This reads `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` from `.env`.\n3. Import this collection into Postman.\n4. Run **Auth → Register Student** first. The test script stores `accessToken`, `refreshToken`, `studentId`, and `studentEmail` automatically.\n5. Run **Submissions → Create Submission**. The test script stores `submissionId` for the follow-up requests.\n6. For admin requests (**List All Submissions**, **Review Submission**), run **Auth → Login Admin** using the seeded admin credentials.\n\n## Variables\nAll variables are collection variables, so no environment file is required. Open the collection's **Variables** tab to edit `baseUrl`, `adminEmail`, or `adminPassword`.\n\n## Status rules\n- Students can create submissions and manage only their own while `PENDING`.\n- Admins can list all submissions, review them, and delete any submission.\n- A rejected submission requires `feedback`.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Returns the API health status. No authentication required."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"API is healthy\", () => {",
+									"  const json = pm.response.json();",
+									"  pm.expect(json.data.status).to.eql(\"healthy\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					}
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register Student",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Student User\",\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "register"]
+						},
+						"description": "Registers a student. Generates a unique student email on every run and saves the returned tokens."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const stamp = Date.now();",
+									"pm.collectionVariables.set(\"studentEmail\", `student-${stamp}@example.com`);",
+									"pm.collectionVariables.set(\"studentPassword\", \"Password123!\");"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.test(\"Returns user and tokens\", () => {",
+									"  pm.expect(json.data.user.email).to.eql(pm.collectionVariables.get(\"studentEmail\"));",
+									"  pm.expect(json.data.tokens.accessToken).to.be.a(\"string\");",
+									"});",
+									"pm.collectionVariables.set(\"accessToken\", json.data.tokens.accessToken);",
+									"pm.collectionVariables.set(\"refreshToken\", json.data.tokens.refreshToken);",
+									"pm.collectionVariables.set(\"studentId\", json.data.user.id);"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					}
+				},
+				{
+					"name": "Login Student",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Logs in the student created by Register Student and refreshes the stored access token."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.collectionVariables.set(\"accessToken\", json.data.tokens.accessToken);",
+									"pm.collectionVariables.set(\"refreshToken\", json.data.tokens.refreshToken);",
+									"pm.collectionVariables.set(\"studentId\", json.data.user.id);"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					}
+				},
+				{
+					"name": "Login Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Logs in the seeded admin and stores `adminAccessToken`. Run `pnpm run db:seed` first; it creates the admin from `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `.env`. The defaults below match the values added to `.env`."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"User is an admin\", () => pm.expect(json.data.user.role).to.eql(\"ADMIN\"));",
+									"pm.collectionVariables.set(\"adminAccessToken\", json.data.tokens.accessToken);",
+									"pm.collectionVariables.set(\"adminId\", json.data.user.id);"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					}
+				}
+			]
+		},
+		{
+			"name": "Submissions",
+			"item": [
+				{
+					"name": "Create Submission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"projectName\": \"My Portfolio Website\",\n  \"repoUrl\": \"https://github.com/student/portfolio-{{$guid}}\",\n  \"liveLink\": \"https://my-portfolio.example.com\",\n  \"description\": \"A portfolio website built with Next.js and Tailwind CSS.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions"]
+						},
+						"description": "Creates a submission for the authenticated student. `repoUrl` is globally unique; the generated GUID keeps reruns working. This endpoint is student-only."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.test(\"Submission is pending\", () => pm.expect(json.data.status).to.eql(\"PENDING\"));",
+									"pm.collectionVariables.set(\"submissionId\", json.data.id);",
+									"pm.collectionVariables.set(\"studentId\", json.data.studentId);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List My Submissions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions/me?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions", "me"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (1-based)."
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Items per page (1-100)."
+								},
+								{
+									"key": "status",
+									"value": "PENDING",
+									"description": "Optional: PENDING, APPROVED, or REJECTED.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lists only the authenticated user's submissions, newest first. Available to any authenticated user (including admins)."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Response is paginated\", () => {",
+									"  pm.expect(json.meta).to.include.keys(\"page\", \"limit\", \"total\", \"totalPages\");",
+									"  pm.expect(json.data).to.be.an(\"array\");",
+									"});",
+									"pm.test(\"Only returns the current user's submissions\", () => {",
+									"  const studentId = pm.collectionVariables.get(\"studentId\");",
+									"  json.data.forEach((item) => pm.expect(item.studentId).to.eql(studentId));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List All Submissions (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "PENDING",
+									"disabled": true
+								},
+								{
+									"key": "studentId",
+									"value": "{{studentId}}",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Admin view of all submissions. Requires Login Admin to have been run."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Response is paginated\", () => pm.expect(json.meta).to.include.keys(\"total\"));"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Get Submission",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions/{{submissionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions", "{{submissionId}}"]
+						},
+						"description": "Returns one submission with student and reviewer summaries. The owner or an admin may access it."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Returns the requested submission\", () => pm.expect(json.data.id).to.eql(pm.collectionVariables.get(\"submissionId\")));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Submission",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"projectName\": \"My Portfolio Website\",\n  \"description\": \"Updated description for my portfolio submission.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions/{{submissionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions", "{{submissionId}}"]
+						},
+						"description": "Updates editable fields on your own submission. Only allowed while the submission is PENDING. Provide at least one field."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Description was updated\", () => pm.expect(json.data.description).to.include(\"Updated\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Review Submission (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"APPROVED\",\n  \"feedback\": \"Great work. The project is approved.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions/{{submissionId}}/review",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions", "{{submissionId}}", "review"]
+						},
+						"description": "Admin-only review of a PENDING submission. Change `status` to `REJECTED` to reject it; rejection requires `feedback`. Run Login Admin first."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Submission was reviewed\", () => {",
+									"  pm.expect(json.data.status).to.be.oneOf([\"APPROVED\", \"REJECTED\"]);",
+									"  pm.expect(json.data.reviewerId).to.be.a(\"string\");",
+									"  pm.expect(json.data.reviewedAt).to.be.a(\"string\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Delete Submission",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions/{{submissionId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions", "{{submissionId}}"]
+						},
+						"description": "Deletes a submission. The owner or an admin may delete it. Clears `submissionId` afterwards."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Deleted submission is returned\", () => pm.expect(json.data.id).to.eql(pm.collectionVariables.get(\"submissionId\")));",
+									"pm.collectionVariables.unset(\"submissionId\");"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminAccessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "studentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "submissionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "studentEmail",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "studentPassword",
+			"value": "Password123!",
+			"type": "string"
+		},
+		{
+			"key": "adminEmail",
+			"value": "admin@gradely.com",
+			"type": "string"
+		},
+		{
+			"key": "adminPassword",
+			"value": "Admin@12345",
+			"type": "string"
+		}
+	]
+}
