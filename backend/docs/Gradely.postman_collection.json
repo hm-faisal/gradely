@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "b6f1f0c2-8d4e-4a7b-9c1e-2f3a4b5c6d7e",
 		"name": "Gradely API",
-		"description": "Collection for the Gradely backend API.\n\n## Setup\n1. Start the API with `pnpm run dev` (default `http://localhost:5000`).\n2. Seed the admin account with `pnpm run db:seed`. This reads `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` from `.env`.\n3. Import this collection into Postman.\n4. Run **Auth → Register Student** first. The test script stores `accessToken`, `refreshToken`, `studentId`, and `studentEmail` automatically.\n5. Run **Submissions → Create Submission**. The test script stores `submissionId` for the follow-up requests.\n6. For admin requests (**List All Submissions**, **Review Submission**), run **Auth → Login Admin** using the seeded admin credentials.\n\n## Variables\nAll variables are collection variables, so no environment file is required. Open the collection's **Variables** tab to edit `baseUrl`, `adminEmail`, or `adminPassword`.\n\n## Status rules\n- Students can create submissions and manage only their own while `PENDING`.\n- Admins can list all submissions, review them, and delete any submission.\n- A rejected submission requires `feedback`.",
+		"description": "Collection for the Gradely backend API.\n\n## Setup\n1. Start the API with `pnpm run dev` (default `http://localhost:5000`).\n2. Seed the admin account with `pnpm run db:seed`. This reads `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` from `.env`.\n3. Import this collection into Postman.\n4. Run **Auth → Register Student** first. The test script stores `accessToken`, `refreshToken`, `studentId`, and `studentEmail` automatically.\n5. Run **Submissions → Create Submission**. The test script stores `submissionId` for the follow-up requests.\n6. For admin requests (**List All Submissions**, **Review Submission**, **Delete User**), run **Auth → Login Admin** using the seeded admin credentials.\n\n## Endpoints covered\n- **Health**: `GET /health`\n- **Auth**: register, login, change password\n- **Users**: get/update the current profile, admin delete user\n- **Submissions**: create, list mine, admin list all, get, update, review, delete\n\n## Variables\nAll variables are collection variables, so no environment file is required. Open the collection's **Variables** tab to edit `baseUrl`, `adminEmail`, or `adminPassword`.\n\n## Authentication cookies\nRegister and Login also set httpOnly `accessToken` / `refreshToken` cookies, and the API prefers the cookie over the `Authorization: Bearer` header. Postman keeps those cookies between requests, so after switching identities (for example, **Login Admin** after **Register Student**) the admin cookie overrides the student Bearer token. If a request unexpectedly returns `403`, clear the cookies for `localhost` (Postman → Cookies, or the cookie icon next to **Send**) and retry.\n\n## Status rules\n- Students can create submissions and manage only their own while `PENDING`.\n- Admins can list all submissions, review them, and delete any submission or user.\n- A rejected submission requires `feedback`.\n- Reviewed submissions cannot be updated or reviewed again.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -154,6 +154,52 @@
 					}
 				},
 				{
+					"name": "Change Password",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"oldPassword\": \"{{studentPassword}}\",\n  \"newPassword\": \"{{nextStudentPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "change-password"]
+						},
+						"description": "Changes the authenticated user's password. Run **Login Student** (or **Register Student**) first so `studentPassword` holds the current password and the cookie jar still holds the student session; run it before **Login Admin**. `newPassword` must be 8-128 characters with an uppercase letter, a lowercase letter, a number, and a special character, without spaces, and must differ from `oldPassword`. The pre-request script generates a fresh password and the test script saves it to `studentPassword`, so reruns keep working. Existing tokens are not revoked."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.collectionVariables.set(\"nextStudentPassword\", `Password${Date.now()}!`);"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Password was changed\", () => pm.expect(json.data).to.eql(null));",
+									"pm.collectionVariables.set(\"studentPassword\", pm.collectionVariables.get(\"nextStudentPassword\"));"
+								]
+							}
+						}
+					]
+				},
+				{
 					"name": "Login Admin",
 					"request": {
 						"method": "POST",
@@ -172,7 +218,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "auth", "login"]
 						},
-						"description": "Logs in the seeded admin and stores `adminAccessToken`. Run `pnpm run db:seed` first; it creates the admin from `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `.env`. The defaults below match the values added to `.env`."
+						"description": "Logs in the seeded admin and stores `adminAccessToken`. Run `pnpm run db:seed` first; it creates the admin from `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `.env`. The defaults below match the values added to `.env`. This also sets admin auth cookies, which take precedence over Bearer tokens; clear the `localhost` cookies before running student requests again."
 					},
 					"response": [],
 					"event": [
@@ -192,6 +238,113 @@
 					],
 					"auth": {
 						"type": "noauth"
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users", "me"]
+						},
+						"description": "Returns the authenticated user's profile without the password: `id`, `name`, `email`, `role`, `status`, `createdAt`, `updatedAt`."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Returns the current user\", () => pm.expect(json.data.id).to.eql(pm.collectionVariables.get(\"studentId\")));",
+									"pm.test(\"Password is not exposed\", () => pm.expect(json.data).to.not.have.property(\"password\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update My Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Student User Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users", "me"]
+						},
+						"description": "Updates the authenticated user's `name` and/or `email`. At least one field is required; `email` must be unique and valid. If you change the email, update `studentEmail` so **Login Student** keeps working."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Name was updated\", () => pm.expect(json.data.name).to.include(\"Updated\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete User (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/{{targetUserId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users", "{{targetUserId}}"]
+						},
+						"description": "Admin-only. Permanently deletes the user whose id is stored in `targetUserId` (copy the id from `studentId` or from any admin list response). Their submissions are cascade-deleted. Run **Login Admin** first, and set `targetUserId` to a throwaway account rather than the student used by the rest of the collection."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Deleted user is returned\", () => pm.expect(json.data.id).to.eql(pm.collectionVariables.get(\"targetUserId\")));",
+									"pm.collectionVariables.unset(\"targetUserId\");"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
 					}
 				}
 			]
@@ -218,7 +371,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions"]
 						},
-						"description": "Creates a submission for the authenticated student. `repoUrl` is globally unique; the generated GUID keeps reruns working. This endpoint is student-only."
+						"description": "Creates a submission for the authenticated student. `repoUrl` must be unique across all submissions and `projectName` must be unique per student; the generated GUID keeps reruns working. `projectName` is 3-255 characters, `description` is 10-5000 characters, and `repoUrl` / `liveLink` must be http(s) URLs. This endpoint is student-only. The response includes the `student` summary."
 					},
 					"response": [],
 					"event": [
@@ -265,7 +418,7 @@
 								}
 							]
 						},
-						"description": "Lists only the authenticated user's submissions, newest first. Available to any authenticated user (including admins)."
+						"description": "Lists only the authenticated user's submissions, newest first. Restricted to the `STUDENT` and `ADMIN` roles; an admin sees only submissions they created themselves (usually none), so use **List All Submissions** for the admin view. Supports `page` (1-based), `limit` (1-100), and an optional `status` filter."
 					},
 					"response": [],
 					"event": [
@@ -319,7 +472,7 @@
 								}
 							]
 						},
-						"description": "Admin view of all submissions. Requires Login Admin to have been run."
+						"description": "Admin view of all submissions, newest first. Requires **Login Admin**. Supports `page` (1-based), `limit` (1-100), optional `status` (`PENDING`, `APPROVED`, `REJECTED`), and optional `studentId`. Each item includes `student` and `reviewer` summaries."
 					},
 					"response": [],
 					"event": [
@@ -392,7 +545,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions", "{{submissionId}}"]
 						},
-						"description": "Updates editable fields on your own submission. Only allowed while the submission is PENDING. Provide at least one field."
+						"description": "Updates editable fields (`projectName`, `repoUrl`, `liveLink`, `description`) on your own submission. Only the owner may update it, only while it is `PENDING`, and at least one field is required. `repoUrl` must stay globally unique and `projectName` unique per student. Validation matches **Create Submission**."
 					},
 					"response": [],
 					"event": [
@@ -428,7 +581,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions", "{{submissionId}}", "review"]
 						},
-						"description": "Admin-only review of a PENDING submission. Change `status` to `REJECTED` to reject it; rejection requires `feedback`. Run Login Admin first."
+						"description": "Admin-only review of a submission. Only `PENDING` submissions can be reviewed, and a submission cannot be reviewed twice. Set `status` to `APPROVED` or `REJECTED`; rejection requires `feedback` (3-2000 characters). The response stores `reviewerId` and `reviewedAt`. Run **Login Admin** first."
 					},
 					"response": [],
 					"event": [
@@ -534,6 +687,16 @@
 		{
 			"key": "studentPassword",
 			"value": "Password123!",
+			"type": "string"
+		},
+		{
+			"key": "nextStudentPassword",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "targetUserId",
+			"value": "",
 			"type": "string"
 		},
 		{
