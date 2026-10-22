@@ -1,5 +1,9 @@
 "use server";
 
+import {
+	ACCESS_TOKEN_COOKIE,
+	REFRESH_TOKEN_COOKIE,
+} from "@/constants/auth.constants";
 import { ApiEnvelope, ApiIssue } from "@/types/auth";
 import { apiInstanse } from "@/utils/api";
 import { cookies } from "next/headers";
@@ -51,14 +55,14 @@ async function storeAuthCookies(tokens?: AuthTokens): Promise<void> {
 	};
 
 	if (tokens?.accessToken) {
-		cookieStore.set("accessToken", tokens.accessToken, {
+		cookieStore.set(ACCESS_TOKEN_COOKIE, tokens.accessToken, {
 			...baseOptions,
 			maxAge: ACCESS_TOKEN_MAX_AGE,
 		});
 	}
 
 	if (tokens?.refreshToken) {
-		cookieStore.set("refreshToken", tokens.refreshToken, {
+		cookieStore.set(REFRESH_TOKEN_COOKIE, tokens.refreshToken, {
 			...baseOptions,
 			maxAge: REFRESH_TOKEN_MAX_AGE,
 		});
