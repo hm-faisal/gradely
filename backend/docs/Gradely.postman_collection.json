@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "b6f1f0c2-8d4e-4a7b-9c1e-2f3a4b5c6d7e",
 		"name": "Gradely API",
-		"description": "Collection for the Gradely backend API.\n\n## Setup\n1. Start the API with `pnpm run dev` (default `http://localhost:5000`).\n2. Seed the admin account with `pnpm run db:seed`. This reads `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` from `.env`.\n3. Import this collection into Postman.\n4. Run **Auth → Register Student** first. The test script stores `accessToken`, `refreshToken`, `studentId`, and `studentEmail` automatically.\n5. Run **Submissions → Create Submission**. The test script stores `submissionId` for the follow-up requests.\n6. For admin requests (**List All Submissions**, **Review Submission**, **Delete User**), run **Auth → Login Admin** using the seeded admin credentials.\n\n## Endpoints covered\n- **Health**: `GET /health`\n- **Auth**: register, login, change password\n- **Users**: get/update the current profile, admin delete user\n- **Submissions**: create, list mine, admin list all, get, update, review, delete\n\n## Variables\nAll variables are collection variables, so no environment file is required. Open the collection's **Variables** tab to edit `baseUrl`, `adminEmail`, or `adminPassword`.\n\n## Authentication cookies\nRegister and Login also set httpOnly `accessToken` / `refreshToken` cookies, and the API prefers the cookie over the `Authorization: Bearer` header. Postman keeps those cookies between requests, so after switching identities (for example, **Login Admin** after **Register Student**) the admin cookie overrides the student Bearer token. If a request unexpectedly returns `403`, clear the cookies for `localhost` (Postman → Cookies, or the cookie icon next to **Send**) and retry.\n\n## Status rules\n- Students can create submissions and manage only their own while `PENDING`.\n- Admins can list all submissions, review them, and delete any submission or user.\n- A rejected submission requires `feedback`.\n- Reviewed submissions cannot be updated or reviewed again.",
+		"description": "Collection for the Gradely backend API, organized by module.\n\n## Setup\n1. Start the API with `pnpm run dev` (default `http://localhost:5000`).\n2. Seed the admin account with `pnpm run db:seed`. This reads `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` from `.env`.\n3. Import this collection into Postman.\n4. Run **Auth → Register Student** first. The test script stores `accessToken`, `refreshToken`, `studentId`, and `studentEmail` automatically.\n5. Run **Submissions → Create Submission**. The test script stores `submissionId` for the follow-up requests.\n6. For admin requests, run **Auth → Login Admin** using the seeded admin credentials.\n7. For reviewer workflows, run **Users → Create Reviewer (Admin)** to provision a reviewer, followed by **Auth → Login Reviewer** to save `reviewerAccessToken`.\n\n## Modules covered\n- **Health**: `GET /health`, `GET /`\n- **Auth**: `POST /api/v1/auth/register`, `POST /api/v1/auth/login` (Student, Reviewer, Admin), `PATCH /api/v1/auth/change-password`\n- **Users**:\n  - Profile: `GET /api/v1/users/me`, `PATCH /api/v1/users/me`\n  - Admin: `GET /api/v1/users` (list/filter/paginate), `POST /api/v1/users/reviewers` (create reviewer), `GET /api/v1/users/:id`, `PATCH /api/v1/users/:id` (update name/email/role/status), `PATCH /api/v1/users/:id/role` (role update), `DELETE /api/v1/users/:id` (cascade delete)\n- **Submissions**:\n  - Student: `POST /api/v1/submissions`, `GET /api/v1/submissions/me`, `PATCH /api/v1/submissions/:id`, `DELETE /api/v1/submissions/:id`\n  - Admin & Reviewer: `GET /api/v1/submissions`, `GET /api/v1/submissions/:id`, `POST /api/v1/submissions/auto-assign`, `PATCH /api/v1/submissions/:id/assign`, `PATCH /api/v1/submissions/:id/review`\n- **Feedbacks**:\n  - Admin: `GET /api/v1/feedbacks`, `GET /api/v1/feedbacks/:id`, `PATCH /api/v1/feedbacks/:id`\n- **Admin**:\n  - `GET /api/v1/admin/summary` (dashboard counters & monthly submission trends)\n\n## Variables\nAll variables are collection variables, so no environment file is required. Open the collection's **Variables** tab to edit `baseUrl`, `adminEmail`, or `adminPassword`.\n\n## Authentication cookies\nRegister and Login also set httpOnly `accessToken` / `refreshToken` cookies, and the API prefers the cookie over the `Authorization: Bearer` header. Postman keeps those cookies between requests, so after switching identities (for example, **Login Admin** after **Register Student**) the admin cookie overrides the student Bearer token. If a request unexpectedly returns `403`, clear the cookies for `localhost` (Postman → Cookies, or the cookie icon next to **Send**) and retry.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -41,6 +41,39 @@
 									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
 									"pm.test(\"API is healthy\", () => {",
 									"  const json = pm.response.json();",
+									"  pm.expect(json.data.status).to.eql(\"healthy\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					}
+				},
+				{
+					"name": "Root Welcome",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": ["{{baseUrl}}"],
+							"path": [""]
+						},
+						"description": "Returns basic API information, version, and status from the server root."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"pm.test(\"Root info returned\", () => {",
+									"  const json = pm.response.json();",
+									"  pm.expect(json.data.name).to.eql(\"Gradely Backend API\");",
 									"  pm.expect(json.data.status).to.eql(\"healthy\");",
 									"});"
 								]
@@ -154,6 +187,88 @@
 					}
 				},
 				{
+					"name": "Login Reviewer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{reviewerEmail}}\",\n  \"password\": \"{{reviewerPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Logs in the reviewer account provisioned via **Users → Create Reviewer (Admin)**. Stores `reviewerAccessToken` and `reviewerId` for reviewer-authorized endpoints."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"User is a reviewer\", () => pm.expect(json.data.user.role).to.eql(\"REVIEWER\"));",
+									"pm.collectionVariables.set(\"reviewerAccessToken\", json.data.tokens.accessToken);",
+									"pm.collectionVariables.set(\"reviewerId\", json.data.user.id);"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					}
+				},
+				{
+					"name": "Login Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "login"]
+						},
+						"description": "Logs in the seeded admin and stores `adminAccessToken`. Run `pnpm run db:seed` first; it creates the admin from `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `.env`. This sets admin cookies; clear `localhost` cookies if switching to student requests."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"User is an admin\", () => pm.expect(json.data.user.role).to.eql(\"ADMIN\"));",
+									"pm.collectionVariables.set(\"adminAccessToken\", json.data.tokens.accessToken);",
+									"pm.collectionVariables.set(\"adminId\", json.data.user.id);"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "noauth"
+					}
+				},
+				{
 					"name": "Change Password",
 					"request": {
 						"method": "PATCH",
@@ -172,7 +287,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "auth", "change-password"]
 						},
-						"description": "Changes the authenticated user's password. Run **Login Student** (or **Register Student**) first so `studentPassword` holds the current password and the cookie jar still holds the student session; run it before **Login Admin**. `newPassword` must be 8-128 characters with an uppercase letter, a lowercase letter, a number, and a special character, without spaces, and must differ from `oldPassword`. The pre-request script generates a fresh password and the test script saves it to `studentPassword`, so reruns keep working. Existing tokens are not revoked."
+						"description": "Changes the authenticated user's password. Run **Login Student** (or **Register Student**) first so `studentPassword` holds the current password. `newPassword` must be 8-128 characters with uppercase, lowercase, number, and special character."
 					},
 					"response": [],
 					"event": [
@@ -198,47 +313,6 @@
 							}
 						}
 					]
-				},
-				{
-					"name": "Login Admin",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "auth", "login"]
-						},
-						"description": "Logs in the seeded admin and stores `adminAccessToken`. Run `pnpm run db:seed` first; it creates the admin from `ADMIN_NAME`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `.env`. The defaults below match the values added to `.env`. This also sets admin auth cookies, which take precedence over Bearer tokens; clear the `localhost` cookies before running student requests again."
-					},
-					"response": [],
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
-									"const json = pm.response.json();",
-									"pm.test(\"User is an admin\", () => pm.expect(json.data.user.role).to.eql(\"ADMIN\"));",
-									"pm.collectionVariables.set(\"adminAccessToken\", json.data.tokens.accessToken);",
-									"pm.collectionVariables.set(\"adminId\", json.data.user.id);"
-								]
-							}
-						}
-					],
-					"auth": {
-						"type": "noauth"
-					}
 				}
 			]
 		},
@@ -310,6 +384,273 @@
 					]
 				},
 				{
+					"name": "List Users (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (1-based)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (1-100, default 20)."
+								},
+								{
+									"key": "role",
+									"value": "STUDENT",
+									"description": "Optional: STUDENT, ADMIN, or REVIEWER.",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE",
+									"description": "Optional: ACTIVE, INACTIVE, BANNED, or DELETED.",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Optional name/email search query.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Admin-only. Paginated list of users. Filter by `role`, `status`, or search by name/email."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Response is paginated\", () => {",
+									"  pm.expect(json.meta).to.include.keys(\"page\", \"limit\", \"total\", \"totalPages\");",
+									"  pm.expect(json.data).to.be.an(\"array\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Create Reviewer (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Reviewer Staff\",\n  \"email\": \"{{reviewerEmail}}\",\n  \"password\": \"{{reviewerPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/reviewers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users", "reviewers"]
+						},
+						"description": "Admin-only. Creates a new user with the `REVIEWER` role. Pre-request script generates unique credentials and stores `reviewerId` and `reviewerEmail`."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"const stamp = Date.now();",
+									"pm.collectionVariables.set(\"reviewerEmail\", `reviewer-${stamp}@gradely.com`);",
+									"pm.collectionVariables.set(\"reviewerPassword\", \"Reviewer123!\");"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 201\", () => pm.response.to.have.status(201));",
+									"const json = pm.response.json();",
+									"pm.test(\"Reviewer created with REVIEWER role\", () => {",
+									"  pm.expect(json.data.role).to.eql(\"REVIEWER\");",
+									"});",
+									"pm.collectionVariables.set(\"reviewerId\", json.data.id);",
+									"pm.collectionVariables.set(\"targetUserId\", json.data.id);"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Get User by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/{{targetUserId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users", "{{targetUserId}}"]
+						},
+						"description": "Admin-only. Returns detailed user profile and aggregate counts (submissions, reviews, feedbacks) for the given user ID."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Returns target user and counts\", () => {",
+									"  pm.expect(json.data.id).to.eql(pm.collectionVariables.get(\"targetUserId\"));",
+									"  pm.expect(json.data.counts).to.include.keys(\"submissions\", \"reviews\", \"feedbacks\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Update User by Admin",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Reviewer Staff Updated\",\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/{{targetUserId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users", "{{targetUserId}}"]
+						},
+						"description": "Admin-only. Modifies `name`, `email`, `role`, and/or `status` (`ACTIVE`, `INACTIVE`, `BANNED`) of any user. Admin cannot change their own role or status."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"User updated successfully\", () => {",
+									"  pm.expect(json.data.id).to.eql(pm.collectionVariables.get(\"targetUserId\"));",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Update User Role (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"REVIEWER\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/users/{{targetUserId}}/role",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "users", "{{targetUserId}}", "role"]
+						},
+						"description": "Admin-only. Dedicated endpoint to change a user's role to `STUDENT`, `ADMIN`, or `REVIEWER`. Administrators cannot change their own role."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Role updated\", () => {",
+									"  pm.expect(json.data.role).to.eql(\"REVIEWER\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
 					"name": "Delete User (Admin)",
 					"request": {
 						"method": "DELETE",
@@ -319,7 +660,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "users", "{{targetUserId}}"]
 						},
-						"description": "Admin-only. Permanently deletes the user whose id is stored in `targetUserId` (copy the id from `studentId` or from any admin list response). Their submissions are cascade-deleted. Run **Login Admin** first, and set `targetUserId` to a throwaway account rather than the student used by the rest of the collection."
+						"description": "Admin-only. Permanently deletes the user whose id is stored in `targetUserId`. Submissions are cascade-deleted."
 					},
 					"response": [],
 					"event": [
@@ -371,7 +712,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions"]
 						},
-						"description": "Creates a submission for the authenticated student. `repoUrl` must be unique across all submissions and `projectName` must be unique per student; the generated GUID keeps reruns working. `projectName` is 3-255 characters, `description` is 10-5000 characters, and `repoUrl` / `liveLink` must be http(s) URLs. This endpoint is student-only. The response includes the `student` summary."
+						"description": "Creates a submission for the authenticated student. `repoUrl` must be unique across all submissions and `projectName` must be unique per student. `projectName` is 3-255 characters, `description` is 10-5000 characters, and URLs must start with http(s). Student-only."
 					},
 					"response": [],
 					"event": [
@@ -415,10 +756,22 @@
 									"value": "PENDING",
 									"description": "Optional: PENDING, APPROVED, or REJECTED.",
 									"disabled": true
+								},
+								{
+									"key": "reviewed",
+									"value": "true",
+									"description": "Optional boolean: true or false.",
+									"disabled": true
+								},
+								{
+									"key": "hasFeedback",
+									"value": "true",
+									"description": "Optional boolean: true or false.",
+									"disabled": true
 								}
 							]
 						},
-						"description": "Lists only the authenticated user's submissions, newest first. Restricted to the `STUDENT` and `ADMIN` roles; an admin sees only submissions they created themselves (usually none), so use **List All Submissions** for the admin view. Supports `page` (1-based), `limit` (1-100), and an optional `status` filter."
+						"description": "Lists only the authenticated user's submissions, newest first. Restricted to `STUDENT` and `ADMIN` roles. Supports `page`, `limit`, `status`, `reviewed`, and `hasFeedback`."
 					},
 					"response": [],
 					"event": [
@@ -443,7 +796,7 @@
 					]
 				},
 				{
-					"name": "List All Submissions (Admin)",
+					"name": "List All Submissions (Admin or Reviewer)",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -469,10 +822,35 @@
 									"key": "studentId",
 									"value": "{{studentId}}",
 									"disabled": true
+								},
+								{
+									"key": "reviewerId",
+									"value": "{{reviewerId}}",
+									"disabled": true
+								},
+								{
+									"key": "reviewed",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "hasFeedback",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "unassigned",
+									"value": "true",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"disabled": true
 								}
 							]
 						},
-						"description": "Admin view of all submissions, newest first. Requires **Login Admin**. Supports `page` (1-based), `limit` (1-100), optional `status` (`PENDING`, `APPROVED`, `REJECTED`), and optional `studentId`. Each item includes `student` and `reviewer` summaries."
+						"description": "Accessible to `ADMIN` and `REVIEWER`. For admins, lists all submissions with rich filters (`studentId`, `reviewerId`, `status`, `reviewed`, `hasFeedback`, `unassigned`, `search`). For reviewers, automatically scopes to submissions assigned to the authenticated reviewer."
 					},
 					"response": [],
 					"event": [
@@ -509,7 +887,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions", "{{submissionId}}"]
 						},
-						"description": "Returns one submission with student and reviewer summaries. The owner or an admin may access it."
+						"description": "Returns one submission with student and reviewer summaries. Accessible by the student owner, assigned reviewer, or an admin."
 					},
 					"response": [],
 					"event": [
@@ -545,7 +923,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions", "{{submissionId}}"]
 						},
-						"description": "Updates editable fields (`projectName`, `repoUrl`, `liveLink`, `description`) on your own submission. Only the owner may update it, only while it is `PENDING`, and at least one field is required. `repoUrl` must stay globally unique and `projectName` unique per student. Validation matches **Create Submission**."
+						"description": "Updates editable fields (`projectName`, `repoUrl`, `liveLink`, `description`) on your own submission. Only the owner may update it, and only while it is `PENDING`."
 					},
 					"response": [],
 					"event": [
@@ -563,7 +941,46 @@
 					]
 				},
 				{
-					"name": "Review Submission (Admin)",
+					"name": "Auto-Assign Reviewers (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions/auto-assign",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions", "auto-assign"]
+						},
+						"description": "Admin-only. Evenly distributes unassigned pending submissions among all active reviewers using a least-loaded balancing strategy."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Auto-assign returned counts\", () => {",
+									"  pm.expect(json.data).to.include.keys(\"assigned\", \"reviewers\", \"assignments\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Assign Reviewer (Admin)",
 					"request": {
 						"method": "PATCH",
 						"header": [
@@ -574,14 +991,62 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"status\": \"APPROVED\",\n  \"feedback\": \"Great work. The project is approved.\"\n}"
+							"raw": "{\n  \"reviewerId\": \"{{reviewerId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/submissions/{{submissionId}}/assign",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "submissions", "{{submissionId}}", "assign"]
+						},
+						"description": "Admin-only. Explicitly assigns an active reviewer to a pending submission. Run **Users → Create Reviewer (Admin)** first to populate `reviewerId`."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Reviewer assigned\", () => {",
+									"  pm.expect(json.data.reviewerId).to.eql(pm.collectionVariables.get(\"reviewerId\"));",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Review Submission (Admin or Reviewer)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"APPROVED\",\n  \"feedback\": \"Great work! The code quality is excellent and tests pass.\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/submissions/{{submissionId}}/review",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions", "{{submissionId}}", "review"]
 						},
-						"description": "Admin-only review of a submission. Only `PENDING` submissions can be reviewed, and a submission cannot be reviewed twice. Set `status` to `APPROVED` or `REJECTED`; rejection requires `feedback` (3-2000 characters). The response stores `reviewerId` and `reviewedAt`. Run **Login Admin** first."
+						"description": "Admin or assigned Reviewer review of a submission. Status must be `APPROVED` or `REJECTED`. Rejection strictly requires `feedback` (3-2000 characters). Automatically creates/syncs a feedback record in the Feedback table."
 					},
 					"response": [],
 					"event": [
@@ -622,7 +1087,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "submissions", "{{submissionId}}"]
 						},
-						"description": "Deletes a submission. The owner or an admin may delete it. Clears `submissionId` afterwards."
+						"description": "Deletes a submission. The owner student or an admin may delete it. Clears `submissionId` afterwards."
 					},
 					"response": [],
 					"event": [
@@ -639,6 +1104,218 @@
 							}
 						}
 					]
+				}
+			]
+		},
+		{
+			"name": "Feedbacks",
+			"item": [
+				{
+					"name": "List Feedbacks (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/feedbacks?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "feedbacks"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (1-based)."
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (1-100, default 20)."
+								},
+								{
+									"key": "reviewerId",
+									"value": "{{reviewerId}}",
+									"description": "Optional: filter by reviewer user ID.",
+									"disabled": true
+								},
+								{
+									"key": "submissionId",
+									"value": "{{submissionId}}",
+									"description": "Optional: filter by submission ID.",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Optional: search text within feedback comments.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Admin-only. Paginated list of all submission feedbacks with included reviewer and student details. Saves first item's ID to `feedbackId` for subsequent tests."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Response is paginated\", () => {",
+									"  pm.expect(json.meta).to.include.keys(\"page\", \"limit\", \"total\", \"totalPages\");",
+									"  pm.expect(json.data).to.be.an(\"array\");",
+									"});",
+									"if (json.data && json.data.length > 0) {",
+									"  pm.collectionVariables.set(\"feedbackId\", json.data[0].id);",
+									"}"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Get Feedback by ID (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/feedbacks/{{feedbackId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "feedbacks", "{{feedbackId}}"]
+						},
+						"description": "Admin-only. Returns the specified feedback record, including the reviewer info and full submission with student details."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Returns the requested feedback\", () => {",
+									"  pm.expect(json.data.id).to.eql(pm.collectionVariables.get(\"feedbackId\"));",
+									"  pm.expect(json.data).to.include.keys(\"content\", \"reviewer\", \"submission\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				},
+				{
+					"name": "Update Feedback (Admin)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Updated admin feedback: Project demonstrated exceptional attention to architecture and code quality.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/feedbacks/{{feedbackId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "feedbacks", "{{feedbackId}}"]
+						},
+						"description": "Admin-only. Edits feedback content (3-2000 characters). Automatically synchronizes the denormalized feedback string on the linked submission."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Feedback content updated\", () => {",
+									"  pm.expect(json.data.content).to.include(\"Updated admin feedback\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Get Admin Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/admin/summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "admin", "summary"]
+						},
+						"description": "Admin-only dashboard analytics. Returns total and role-based user counts (students, admins, reviewers), submission totals (pending, approved, rejected), monthly trends over the last 6 months, and total feedbacks count."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Status code is 200\", () => pm.response.to.have.status(200));",
+									"const json = pm.response.json();",
+									"pm.test(\"Returns summary metrics\", () => {",
+									"  pm.expect(json.data).to.include.keys(\"users\", \"submissions\", \"feedbacks\");",
+									"  pm.expect(json.data.users).to.include.keys(\"total\", \"students\", \"admins\", \"reviewers\");",
+									"  pm.expect(json.data.submissions).to.include.keys(\"total\", \"pending\", \"approved\", \"rejected\", \"monthly\");",
+									"});"
+								]
+							}
+						}
+					],
+					"auth": {
+						"type": "bearer",
+						"bearer": [
+							{
+								"key": "token",
+								"value": "{{adminAccessToken}}",
+								"type": "string"
+							}
+						]
+					}
 				}
 			]
 		}
@@ -665,6 +1342,11 @@
 			"type": "string"
 		},
 		{
+			"key": "reviewerAccessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
 			"key": "studentId",
 			"value": "",
 			"type": "string"
@@ -675,7 +1357,22 @@
 			"type": "string"
 		},
 		{
+			"key": "reviewerId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "targetUserId",
+			"value": "",
+			"type": "string"
+		},
+		{
 			"key": "submissionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "feedbackId",
 			"value": "",
 			"type": "string"
 		},
@@ -695,8 +1392,13 @@
 			"type": "string"
 		},
 		{
-			"key": "targetUserId",
+			"key": "reviewerEmail",
 			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reviewerPassword",
+			"value": "Reviewer123!",
 			"type": "string"
 		},
 		{

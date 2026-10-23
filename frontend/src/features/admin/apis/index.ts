@@ -46,16 +46,16 @@ const buildQuery = (params: QueryParams): string => {
 
 const toPaginatedResult = <T>(
   result: AdminApiResult<T[]> | null,
-  page: number,
+  offset: number,
   limit: number,
 ): PaginatedResult<T> => {
   if (!result || !Array.isArray(result.data)) {
-    return emptyPaginatedResult<T>(page, limit);
+    return emptyPaginatedResult<T>(offset, limit);
   }
 
   return {
     items: result.data,
-    meta: result.meta ?? createPaginationMeta(page, limit, result.data.length),
+    meta: result.meta ?? createPaginationMeta(offset, limit, result.data.length),
   };
 };
 
@@ -106,20 +106,21 @@ const getAllPages = async <T>(
   params: QueryParams = {},
   pageSize = MAX_PAGE_SIZE,
 ) => {
-  const buildEndpoint = (page: number) =>
-    `${endpoint}?${buildQuery({ ...params, limit: pageSize, page })}`;
+  const buildEndpoint = (offset: number) =>
+    `${endpoint}?${buildQuery({ ...params, limit: pageSize, offset })}`;
 
-  const first = await requestAdminApi<T[]>(buildEndpoint(1));
+  const first = await requestAdminApi<T[]>(buildEndpoint(0));
 
   if (!first || !Array.isArray(first.data)) return [];
 
-  const totalPages = Math.max(first.meta?.totalPages ?? 1, 1);
+  const total = first.meta?.total ?? first.data.length;
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
 
   if (totalPages <= 1) return first.data;
 
   const remaining = await Promise.all(
     Array.from({ length: totalPages - 1 }, (_, index) =>
-      requestAdminApi<T[]>(buildEndpoint(index + 2)),
+      requestAdminApi<T[]>(buildEndpoint((index + 1) * pageSize)),
     ),
   );
 
@@ -133,14 +134,15 @@ export const getAdminSummary = cache(async (): Promise<AdminSummary | null> => {
 
 export const getAdminSubmissions = cache(
   async (
-    page = 1,
+    offset = 0,
     limit = DEFAULT_PAGE_SIZE,
+    search?: string,
   ): Promise<PaginatedResult<Submission>> => {
     const result = await requestAdminApi<Submission[]>(
-      `submissions?${buildQuery({ page, limit })}`,
+      `submissions?${buildQuery({ offset, limit, searchParam: search, search })}`,
     );
 
-    return toPaginatedResult(result, page, limit);
+    return toPaginatedResult(result, offset, limit);
   },
 );
 
@@ -150,7 +152,7 @@ export const getAdminUnassignedPendingCount = cache(
       `submissions?${buildQuery({
         status: "PENDING",
         unassigned: true,
-        page: 1,
+        offset: 0,
         limit: 1,
       })}`,
     );
@@ -161,14 +163,15 @@ export const getAdminUnassignedPendingCount = cache(
 
 export const getAdminFeedbacks = cache(
   async (
-    page = 1,
+    offset = 0,
     limit = DEFAULT_PAGE_SIZE,
+    search?: string,
   ): Promise<PaginatedResult<AdminFeedback>> => {
     const result = await requestAdminApi<AdminFeedback[]>(
-      `feedbacks?${buildQuery({ page, limit })}`,
+      `feedbacks?${buildQuery({ offset, limit, searchParam: search, search })}`,
     );
 
-    return toPaginatedResult(result, page, limit);
+    return toPaginatedResult(result, offset, limit);
   },
 );
 
@@ -181,15 +184,16 @@ export const getAdminFeedback = cache(
 
 export const getAdminUsers = cache(
   async (
-    page = 1,
+    offset = 0,
     role?: UserRole,
     limit = DEFAULT_PAGE_SIZE,
+    search?: string,
   ): Promise<PaginatedResult<AdminUser>> => {
     const result = await requestAdminApi<AdminUser[]>(
-      `users?${buildQuery({ page, limit, role })}`,
+      `users?${buildQuery({ offset, limit, role, searchParam: search, search })}`,
     );
 
-    return toPaginatedResult(result, page, limit);
+    return toPaginatedResult(result, offset, limit);
   },
 );
 

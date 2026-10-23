@@ -1,32 +1,45 @@
 import { Eye, MessageSquareQuote } from "lucide-react";
 import { Pagination } from "@/components/tables/Pagination";
 import { TableActionLink } from "@/components/tables/TableAction";
+import { TableControls } from "@/components/tables/TableControls";
 import { Card, CardContent } from "@/components/ui/card";
 import { getAdminFeedbacks } from "@/features/admin/apis";
 import { EditFeedbackDialog } from "@/features/admin/components/EditFeedback.dialog";
 import { StatusBadge } from "@/features/submissions/components/Status.badge";
-import { buildPageHref, parsePageParam } from "@/utils/pagination";
+import {
+  buildOffsetHref,
+  parseLimitParam,
+  parseOffsetParam,
+  parseSearchParam,
+} from "@/utils/pagination";
 import { formatDate, getInitials, truncate } from "@/utils/utils";
 
 export const instant = false;
 
 type AdminFeedbacksPageProps = {
-  searchParams: Promise<{ page?: string | string[] }>;
+  searchParams: Promise<{
+    offset?: string | string[];
+    limit?: string | string[];
+    search?: string | string[];
+    searchParam?: string | string[];
+  }>;
 };
 
 const AdminFeedbacksPage = async ({
   searchParams,
 }: AdminFeedbacksPageProps) => {
   const params = await searchParams;
-  const page = parsePageParam(params.page);
-  const feedbacksPage = await getAdminFeedbacks(page);
+  const offset = parseOffsetParam(params.offset);
+  const limit = parseLimitParam(params.limit);
+  const search = parseSearchParam(params.searchParam ?? params.search);
+  const feedbacksPage = await getAdminFeedbacks(offset, limit, search);
   const { items: feedbacks, meta } = feedbacksPage;
   const newestFirst = [...feedbacks].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
-  const pageHref = (nextPage: number) =>
-    buildPageHref("/admin/feedbacks", {}, nextPage);
+  const pageHref = (nextOffset: number) =>
+    buildOffsetHref("/admin/feedbacks", { limit, search }, nextOffset);
 
   return (
     <section
@@ -47,6 +60,13 @@ const AdminFeedbacksPage = async ({
           Every piece of reviewer feedback, newest first.
         </p>
       </div>
+
+      <TableControls
+        pathname="/admin/feedbacks"
+        currentSearch={search}
+        currentLimit={limit}
+        searchPlaceholder="Search by feedback content…"
+      />
 
       <Card>
         {newestFirst.length === 0 ? (

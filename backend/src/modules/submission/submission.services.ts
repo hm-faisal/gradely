@@ -102,8 +102,10 @@ type SubmissionFilters = {
 };
 
 type SubmissionPagination = {
-	page: number;
+	offset: number;
 	limit: number;
+	searchParam?: string;
+	search?: string;
 	reviewed?: boolean;
 	hasFeedback?: boolean;
 	unassigned?: boolean;
@@ -114,6 +116,13 @@ const paginateSubmissions = async (
 	query: SubmissionPagination,
 ) => {
 	let collection = db.orm.public.Submission.where(filters);
+
+	const search = (query.searchParam ?? query.search)?.toLowerCase();
+	if (search) {
+		collection = collection.where((submission) =>
+			submission.projectName.ilike(`%${search}%`),
+		);
+	}
 
 	if (query.reviewed !== undefined) {
 		const reviewed = query.reviewed;

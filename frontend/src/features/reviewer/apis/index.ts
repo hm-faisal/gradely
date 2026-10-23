@@ -79,34 +79,35 @@ const requestApi = async <T>(
 
 const toPaginatedResult = (
   result: ApiResult<Submission[]> | null,
-  page: number,
+  offset: number,
   limit: number,
 ): PaginatedResult<Submission> => {
   if (!result || !Array.isArray(result.data)) {
-    return emptyPaginatedResult<Submission>(page, limit);
+    return emptyPaginatedResult<Submission>(offset, limit);
   }
 
   return {
     items: result.data,
-    meta: result.meta ?? createPaginationMeta(page, limit, result.data.length),
+    meta: result.meta ?? createPaginationMeta(offset, limit, result.data.length),
   };
 };
 
 const getAllPages = async (params: QueryParams = {}) => {
-  const buildEndpoint = (page: number) =>
-    `submissions?${buildQuery({ ...params, limit: MAX_PAGE_SIZE, page })}`;
+  const buildEndpoint = (offset: number) =>
+    `submissions?${buildQuery({ ...params, limit: MAX_PAGE_SIZE, offset })}`;
 
-  const first = await requestApi<Submission[]>(buildEndpoint(1));
+  const first = await requestApi<Submission[]>(buildEndpoint(0));
 
   if (!first || !Array.isArray(first.data)) return [];
 
-  const totalPages = Math.max(first.meta?.totalPages ?? 1, 1);
+  const total = first.meta?.total ?? first.data.length;
+  const totalPages = Math.max(Math.ceil(total / MAX_PAGE_SIZE), 1);
 
   if (totalPages <= 1) return first.data;
 
   const remaining = await Promise.all(
     Array.from({ length: totalPages - 1 }, (_, index) =>
-      requestApi<Submission[]>(buildEndpoint(index + 2)),
+      requestApi<Submission[]>(buildEndpoint((index + 1) * MAX_PAGE_SIZE)),
     ),
   );
 
@@ -116,38 +117,44 @@ const getAllPages = async (params: QueryParams = {}) => {
 export const getMyAssignedSubmissions = cache(
   async (
     reviewerId: string,
-    page = 1,
+    offset = 0,
     limit = DEFAULT_PAGE_SIZE,
+    search?: string,
   ): Promise<PaginatedResult<Submission>> => {
     const result = await requestApi<Submission[]>(
       `submissions?${buildQuery({
         reviewerId,
         status: "PENDING",
-        page,
+        offset,
         limit,
+        searchParam: search,
+        search,
       })}`,
     );
 
-    return toPaginatedResult(result, page, limit);
+    return toPaginatedResult(result, offset, limit);
   },
 );
 
 export const getMyReviewedSubmissions = cache(
   async (
     reviewerId: string,
-    page = 1,
+    offset = 0,
     limit = DEFAULT_PAGE_SIZE,
+    search?: string,
   ): Promise<PaginatedResult<Submission>> => {
     const result = await requestApi<Submission[]>(
       `submissions?${buildQuery({
         reviewerId,
         reviewed: true,
-        page,
+        offset,
         limit,
+        searchParam: search,
+        search,
       })}`,
     );
 
-    return toPaginatedResult(result, page, limit);
+    return toPaginatedResult(result, offset, limit);
   },
 );
 
@@ -160,7 +167,7 @@ export const getMyReviewCounts = cache(
         `submissions?${buildQuery({
           reviewerId,
           status: "APPROVED",
-          page: 1,
+          offset: 0,
           limit: 1,
         })}`,
       ),
@@ -168,7 +175,7 @@ export const getMyReviewCounts = cache(
         `submissions?${buildQuery({
           reviewerId,
           status: "REJECTED",
-          page: 1,
+          offset: 0,
           limit: 1,
         })}`,
       ),

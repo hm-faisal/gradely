@@ -89,9 +89,9 @@ export const listSubmissionsQuerySchema = createPaginationSchema(10).extend({
 	status: submissionStatusSchema.optional(),
 	studentId: z.string().trim().min(1).optional(),
 	reviewerId: z.string().trim().min(1).optional(),
-		reviewed: booleanQuerySchema.optional(),
-		hasFeedback: booleanQuerySchema.optional(),
-		unassigned: booleanQuerySchema.optional(),
+	reviewed: booleanQuerySchema.optional(),
+	hasFeedback: booleanQuerySchema.optional(),
+	unassigned: booleanQuerySchema.optional(),
 });
 
 export const listMySubmissionsQuerySchema = createPaginationSchema(10).extend({

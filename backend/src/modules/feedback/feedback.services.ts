@@ -51,11 +51,17 @@ const listFeedbacks = async (query: ListFeedbacksQuery) => {
 	if (query.reviewerId) filters.reviewerId = query.reviewerId;
 	if (query.submissionId) filters.submissionId = query.submissionId;
 
-	const baseCollection = db.orm.public.Feedback;
-	const collection =
+	let collection =
 		Object.keys(filters).length > 0
-			? baseCollection.where(filters)
-			: baseCollection;
+			? db.orm.public.Feedback.where(filters)
+			: db.orm.public.Feedback;
+
+	const search = (query.searchParam ?? query.search)?.toLowerCase();
+	if (search) {
+		collection = collection.where((feedback) =>
+			feedback.content.ilike(`%${search}%`),
+		);
+	}
 
 	const { total } = await collection.aggregate((aggregate) => ({
 		total: aggregate.count(),

@@ -1,3 +1,4 @@
+import { or } from "@prisma/orm-postgres/orm-client";
 import { BadRequestError, NotFoundError } from "../../errors";
 import { db } from "../../prisma/db";
 import { bcryptUtil } from "../../utils/bcrypt";
@@ -55,11 +56,17 @@ const listUsers = async (query: ListUsersQuery) => {
 	if (query.role) filters.role = query.role;
 	if (query.status) filters.status = query.status;
 
-	const baseCollection = db.orm.public.User;
-	const collection =
+	let collection =
 		Object.keys(filters).length > 0
-			? baseCollection.where(filters)
-			: baseCollection;
+			? db.orm.public.User.where(filters)
+			: db.orm.public.User;
+
+	const search = (query.searchParam ?? query.search)?.toLowerCase();
+	if (search) {
+		collection = collection.where((user) =>
+			or(user.name.ilike(`%${search}%`), user.email.ilike(`%${search}%`)),
+		);
+	}
 
 	const { total } = await collection.aggregate((aggregate) => ({
 		total: aggregate.count(),

@@ -8,8 +8,8 @@ import { getPageRange, getPaginationItems } from "@/utils/pagination";
 
 type PaginationProps = {
   meta: PaginationMeta;
-  buildHref: (page: number) => string;
-    itemLabel?: string;
+  buildHref: (offset: number) => string;
+  itemLabel?: string;
   className?: string;
 };
 
@@ -21,10 +21,12 @@ export const Pagination = ({
 }: PaginationProps) => {
   if (meta.total === 0) return null;
 
-  const totalPages = Math.max(meta.totalPages, 1);
-  const currentPage = Math.min(Math.max(meta.page, 1), totalPages);
-  const { from, to } = getPageRange(currentPage, meta.limit, meta.total);
-  const items = getPaginationItems(currentPage, totalPages);
+  const { offset, limit, total } = meta;
+  const { from, to } = getPageRange(offset, limit, total);
+  const items = getPaginationItems(offset, limit, total);
+
+  const prevOffset = Math.max(0, offset - limit);
+  const nextOffset = offset + limit;
 
   return (
     <nav
@@ -37,14 +39,14 @@ export const Pagination = ({
       <p className="text-xs text-muted-foreground">
         Showing <span className="font-medium text-foreground">{from}</span>–
         <span className="font-medium text-foreground">{to}</span> of{" "}
-        <span className="font-medium text-foreground">{meta.total}</span>{" "}
+        <span className="font-medium text-foreground">{total}</span>{" "}
         {itemLabel}
       </p>
 
       <div className="flex items-center gap-1">
         <PageLink
-          href={buildHref(currentPage - 1)}
-          disabled={currentPage <= 1}
+          href={buildHref(prevOffset)}
+          disabled={!meta.hasPreviousPage}
           label="Previous page"
           className="px-2"
         >
@@ -56,7 +58,7 @@ export const Pagination = ({
           {items.map((item, index) =>
             item === "ellipsis" ? (
               <li
-                key={`ellipsis-after-${items[index - 1] ?? 1}`}
+                key={`ellipsis-${index}`}
                 aria-hidden="true"
                 className="flex size-8 items-center justify-center text-xs text-muted-foreground"
               >
@@ -66,17 +68,17 @@ export const Pagination = ({
               <li key={item}>
                 <Link
                   href={buildHref(item)}
-                  aria-label={`Page ${item}`}
-                  aria-current={item === currentPage ? "page" : undefined}
+                  aria-label={`Go to offset ${item}`}
+                  aria-current={item === offset ? "page" : undefined}
                   className={cn(
                     buttonVariants({
-                      variant: item === currentPage ? "default" : "outline",
+                      variant: item === offset ? "default" : "outline",
                       size: "icon-sm",
                     }),
                     "tabular-nums",
                   )}
                 >
-                  {item}
+                  {Math.floor(item / limit) + 1}
                 </Link>
               </li>
             ),
@@ -84,8 +86,8 @@ export const Pagination = ({
         </ul>
 
         <PageLink
-          href={buildHref(currentPage + 1)}
-          disabled={currentPage >= totalPages}
+          href={buildHref(nextOffset)}
+          disabled={!meta.hasNextPage}
           label="Next page"
           className="px-2"
         >

@@ -84,40 +84,41 @@ const requestApi = async <T>(
 
 const toPaginatedResult = (
   result: ApiResult<Submission[]> | null,
-  page: number,
+  offset: number,
   limit: number,
 ): PaginatedResult<Submission> => {
   if (!result || !Array.isArray(result.data)) {
-    return emptyPaginatedResult<Submission>(page, limit);
+    return emptyPaginatedResult<Submission>(offset, limit);
   }
 
   return {
     items: result.data,
-    meta: result.meta ?? createPaginationMeta(page, limit, result.data.length),
+    meta: result.meta ?? createPaginationMeta(offset, limit, result.data.length),
   };
 };
 
 const getSubmissionsPage = async (
-  page: number,
+  offset: number,
   params: QueryParams = {},
   limit = MAX_PAGE_SIZE,
 ) =>
   requestApi<Submission[]>(
-    `submissions/me?${buildQuery({ ...params, limit, page })}`,
+    `submissions/me?${buildQuery({ ...params, limit, offset })}`,
   );
 
 const getAllSubmissions = async (params: QueryParams = {}) => {
-  const first = await getSubmissionsPage(1, params);
+  const first = await getSubmissionsPage(0, params);
 
   if (!first || !Array.isArray(first.data)) return [];
 
-  const totalPages = Math.max(first.meta?.totalPages ?? 1, 1);
+  const total = first.meta?.total ?? first.data.length;
+  const totalPages = Math.max(Math.ceil(total / MAX_PAGE_SIZE), 1);
 
   if (totalPages <= 1) return first.data;
 
   const remaining = await Promise.all(
     Array.from({ length: totalPages - 1 }, (_, index) =>
-      getSubmissionsPage(index + 2, params),
+      getSubmissionsPage((index + 1) * MAX_PAGE_SIZE, params),
     ),
   );
 
@@ -147,23 +148,33 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
 
 export const getMySubmissions = cache(
   async (
-    page = 1,
+    offset = 0,
     limit = DEFAULT_PAGE_SIZE,
+    search?: string,
   ): Promise<PaginatedResult<Submission>> => {
-    const result = await getSubmissionsPage(page, {}, limit);
+    const result = await getSubmissionsPage(
+      offset,
+      search ? { searchParam: search, search } : {},
+      limit,
+    );
 
-    return toPaginatedResult(result, page, limit);
+    return toPaginatedResult(result, offset, limit);
   },
 );
 
 export const getMyFeedback = cache(
   async (
-    page = 1,
+    offset = 0,
     limit = DEFAULT_PAGE_SIZE,
+    search?: string,
   ): Promise<PaginatedResult<Submission>> => {
-    const result = await getSubmissionsPage(page, { hasFeedback: true }, limit);
+    const result = await getSubmissionsPage(
+      offset,
+      { hasFeedback: true, ...(search ? { searchParam: search, search } : {}) },
+      limit,
+    );
 
-    return toPaginatedResult(result, page, limit);
+    return toPaginatedResult(result, offset, limit);
   },
 );
 

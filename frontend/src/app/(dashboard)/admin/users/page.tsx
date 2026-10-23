@@ -1,6 +1,7 @@
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { Pagination } from "@/components/tables/Pagination";
+import { TableControls } from "@/components/tables/TableControls";
 import { Card, CardContent } from "@/components/ui/card";
 import { getAdminUsers } from "@/features/admin/apis";
 import { EditUserDialog } from "@/features/admin/components/EditUser.dialog";
@@ -13,7 +14,12 @@ import {
   getUserStatusStyle,
 } from "@/features/admin/utils";
 import { getCurrentUser } from "@/features/submissions/apis";
-import { buildPageHref, parsePageParam } from "@/utils/pagination";
+import {
+  buildOffsetHref,
+  parseLimitParam,
+  parseOffsetParam,
+  parseSearchParam,
+} from "@/utils/pagination";
 import { formatDate, getInitials, truncate } from "@/utils/utils";
 
 export const instant = false;
@@ -21,7 +27,10 @@ export const instant = false;
 type AdminUsersPageProps = {
   searchParams: Promise<{
     role?: string | string[];
-    page?: string | string[];
+    offset?: string | string[];
+    limit?: string | string[];
+    search?: string | string[];
+    searchParam?: string | string[];
   }>;
 };
 
@@ -38,10 +47,12 @@ const AdminUsersPage = async ({ searchParams }: AdminUsersPageProps) => {
   const selectedRole = ROLE_FILTERS.find(
     (filter) => filter.role !== undefined && filter.role === rawRole,
   )?.role;
-  const page = parsePageParam(params.page);
+  const offset = parseOffsetParam(params.offset);
+  const limit = parseLimitParam(params.limit);
+  const search = parseSearchParam(params.searchParam ?? params.search);
 
   const [usersPage, currentUser] = await Promise.all([
-    getAdminUsers(page, selectedRole),
+    getAdminUsers(offset, selectedRole, limit, search),
     getCurrentUser(),
   ]);
   const { items: users, meta } = usersPage;
@@ -49,8 +60,8 @@ const AdminUsersPage = async ({ searchParams }: AdminUsersPageProps) => {
   const filterHref = (role?: UserRole) =>
     role ? `/admin/users?role=${role}` : "/admin/users";
 
-  const pageHref = (nextPage: number) =>
-    buildPageHref("/admin/users", { role: selectedRole }, nextPage);
+  const pageHref = (nextOffset: number) =>
+    buildOffsetHref("/admin/users", { role: selectedRole, limit, search }, nextOffset);
 
   return (
     <section
@@ -73,26 +84,35 @@ const AdminUsersPage = async ({ searchParams }: AdminUsersPageProps) => {
         </p>
       </div>
 
-      <nav aria-label="Filter users by role" className="flex flex-wrap gap-1">
-        {ROLE_FILTERS.map((filter) => {
-          const isActive = filter.role === selectedRole;
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Filter users by role" className="flex flex-wrap gap-1">
+          {ROLE_FILTERS.map((filter) => {
+            const isActive = filter.role === selectedRole;
 
-          return (
-            <Link
-              key={filter.label}
-              href={filterHref(filter.role)}
-              aria-current={isActive ? "page" : undefined}
-              className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? "border-primary/20 bg-primary/10 text-primary"
-                  : "bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {filter.label}
-            </Link>
-          );
-        })}
-      </nav>
+            return (
+              <Link
+                key={filter.label}
+                href={filterHref(filter.role)}
+                aria-current={isActive ? "page" : undefined}
+                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "border-primary/20 bg-primary/10 text-primary"
+                    : "bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {filter.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <TableControls
+          pathname="/admin/users"
+          currentSearch={search}
+          currentLimit={limit}
+          extraParams={{ role: selectedRole }}
+          searchPlaceholder="Search by name or email…"
+        />
+      </div>
 
       <Card>
         {users.length === 0 ? (

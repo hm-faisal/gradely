@@ -4,13 +4,15 @@ export const MAX_PAGE_SIZE = 100;
 
 export const createPaginationSchema = (defaultLimit = 10) =>
 	z.object({
-		page: z.coerce.number().int().min(1).default(1),
+		offset: z.coerce.number().int().min(0).default(0),
 		limit: z.coerce
 			.number()
 			.int()
 			.min(1)
 			.max(MAX_PAGE_SIZE)
 			.default(defaultLimit),
+		searchParam: z.string().trim().optional(),
+		search: z.string().trim().optional(),
 	});
 
 export const booleanQuerySchema = z
