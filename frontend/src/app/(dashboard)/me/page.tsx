@@ -56,7 +56,6 @@ const StatCard = ({ label, value, hint, icon: Icon, tone }: StatCardProps) => (
 );
 
 const SummaryPage = async () => {
-  // The summary depends on the current month, so render it at request time.
   await connection();
 
   const submissions = await getAllMySubmissions();

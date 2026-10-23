@@ -89,12 +89,9 @@ export const listSubmissionsQuerySchema = createPaginationSchema(10).extend({
 	status: submissionStatusSchema.optional(),
 	studentId: z.string().trim().min(1).optional(),
 	reviewerId: z.string().trim().min(1).optional(),
-	/** Only submissions that have (or have not) been reviewed. */
-	reviewed: booleanQuerySchema.optional(),
-	/** Only submissions with (or without) feedback attached. */
-	hasFeedback: booleanQuerySchema.optional(),
-	/** Only pending submissions with (or without) an assigned reviewer. */
-	unassigned: booleanQuerySchema.optional(),
+		reviewed: booleanQuerySchema.optional(),
+		hasFeedback: booleanQuerySchema.optional(),
+		unassigned: booleanQuerySchema.optional(),
 });
 
 export const listMySubmissionsQuerySchema = createPaginationSchema(10).extend({

@@ -26,13 +26,6 @@ const decodeTokenPayload = (token: string): TokenPayload | null => {
 	}
 };
 
-/**
- * Decodes the user data carried by an access token.
- *
- * This is an optimistic check: the signature is verified by the backend when
- * the token is used, so it must not be treated as a secure authorization
- * decision on its own.
- */
 export const getSessionUserFromToken = (token: string): SessionUser | null => {
 	const payload = decodeTokenPayload(token);
 
@@ -55,9 +48,6 @@ export const getSessionUserFromToken = (token: string): SessionUser | null => {
 	return { id, email, role };
 };
 
-/**
- * Reads the access token cookie and returns the user data it carries.
- */
 export const getSessionUser = (request: NextRequest): SessionUser | null => {
 	const token = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
 

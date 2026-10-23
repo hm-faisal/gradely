@@ -1,10 +1,6 @@
 import { DEFAULT_PAGE_SIZE } from "@/constants/pagination.constants";
 import type { PaginatedResult, PaginationMeta } from "@/types/pagination";
 
-/**
- * Reads a page number from the `searchParams` value Next.js provides. Invalid
- * or missing values fall back to the first page.
- */
 export const parsePageParam = (value?: string | string[] | null): number => {
   const rawValue = Array.isArray(value) ? value[0] : value;
   const page = Number(rawValue);
@@ -37,10 +33,6 @@ export const emptyPaginatedResult = <T>(
   meta: createPaginationMeta(page, limit),
 });
 
-/**
- * Builds a URL for a page while preserving the active filters. The first page
- * omits the `page` query parameter so the canonical list URL stays clean.
- */
 export const buildPageHref = (
   pathname: string,
   params: Record<string, string | number | undefined | null>,
@@ -82,10 +74,6 @@ export const getPageRange = (
 
 const ELLIPSIS = "ellipsis" as const;
 
-/**
- * Produces a compact set of page numbers with ellipses for long result sets,
- * e.g. `[1, "ellipsis", 4, 5, 6, "ellipsis", 20]`.
- */
 export const getPaginationItems = (
   page: number,
   totalPages: number,

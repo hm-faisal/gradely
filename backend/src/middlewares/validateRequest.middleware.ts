@@ -7,7 +7,6 @@ import { catchAsync } from "../utils/catchAsync";
 declare global {
 	namespace Express {
 		interface Request {
-			/** Query string values parsed by the `validateQuery` middleware. */
 			validatedQuery?: unknown;
 		}
 	}
@@ -27,11 +26,6 @@ const validationError = (error: z.ZodError): AppError => {
 	);
 };
 
-/**
- * request validation middleware using zod
- * @param zodSchema zod validation schema
- * @returns request handler
- */
 export const validateRequest = (zodSchema: z.ZodType): RequestHandler => {
 	return catchAsync((req, _res, next) => {
 		const result = zodSchema.safeParse(req.body ?? {});
@@ -45,11 +39,6 @@ export const validateRequest = (zodSchema: z.ZodType): RequestHandler => {
 	});
 };
 
-/**
- * request query validation middleware using zod.
- * The parsed value is exposed as `req.validatedQuery` because Express 5
- * exposes `req.query` as a read-only getter.
- */
 export const validateQuery = (zodSchema: z.ZodType): RequestHandler => {
 	return catchAsync((req, _res, next) => {
 		const result = zodSchema.safeParse(req.query ?? {});

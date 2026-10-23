@@ -9,7 +9,6 @@ export const metadata: Metadata = {
     "Manage submissions, feedback, reviewer accounts, and platform access.",
 };
 
-// The admin console reads the session and live data on every request.
 export const instant = false;
 
 const AdminLayout = ({ children }: { children: ReactNode }) => {

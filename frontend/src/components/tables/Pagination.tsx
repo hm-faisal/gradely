@@ -9,8 +9,7 @@ import { getPageRange, getPaginationItems } from "@/utils/pagination";
 type PaginationProps = {
   meta: PaginationMeta;
   buildHref: (page: number) => string;
-  /** Plural noun used in the result summary, e.g. "submissions". */
-  itemLabel?: string;
+    itemLabel?: string;
   className?: string;
 };
 

@@ -14,7 +14,6 @@ const bootstrap = async () => {
 			`[Bootstrap] Starting Gradely API in ${envConfig.NODE_ENV} mode...`,
 		);
 
-		// Connect to PostgreSQL database
 		if (envConfig.DATABASE_URL) {
 			try {
 				await connectDatabase();
@@ -28,7 +27,6 @@ const bootstrap = async () => {
 			);
 		}
 
-		// Start HTTP Server
 		server = createServer(app);
 		server.listen(envConfig.PORT, "0.0.0.0", () => {
 			console.log(
@@ -51,7 +49,6 @@ const handleGracefulShutdown = async (signal: string) => {
 			process.exit(0);
 		});
 
-		// Force exit after 10s timeout
 		setTimeout(() => {
 			console.error("[Server] Forced shutdown due to timeout.");
 			process.exit(1);
@@ -74,15 +71,3 @@ process.on("uncaughtException", (error) => {
 });
 
 bootstrap();
-
-/*
-try {
-		const users = await listUsers();
-		response.writeHead(200, { "content-type": "application/json" });
-		response.end(JSON.stringify({ users }));
-	} catch (error) {
-		console.error("Failed to query users:", error);
-		response.writeHead(500, { "content-type": "application/json" });
-		response.end(JSON.stringify({ error: "Could not query users yet." }));
-  }
-*/

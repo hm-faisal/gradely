@@ -16,7 +16,6 @@ import appRoutes from "../routes";
 export const createApp = (): Application => {
 	const app = express();
 
-	// Security & Parsing Middlewares
 	app.use(
 		cors({
 			origin: envConfig.CORS_ORIGIN,
@@ -29,7 +28,6 @@ export const createApp = (): Application => {
 	app.use(sanitizeInput);
 	app.use(morgan("combined"));
 
-	// Root welcome & info route
 	app.get("/", (_req: Request, res: Response) => {
 		res.status(200).json({
 			data: {
@@ -42,14 +40,10 @@ export const createApp = (): Application => {
 		});
 	});
 
-	// API Routes
 	app.use("/health", healthRoutes);
 	app.use("/api/v1", appRoutes);
 
-	// 404 Not Found Middleware
 	app.use(notFoundHandler);
-
-	// Global Error Handler Middleware
 	app.use(globalErrorHandler);
 
 	return app;

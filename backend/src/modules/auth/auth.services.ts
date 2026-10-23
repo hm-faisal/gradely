@@ -16,7 +16,6 @@ const register = async (payload: {
 }) => {
 	const { email } = payload;
 
-	// check if user exist
 	const existingUser = await findUserByEmail(email);
 	if (existingUser) {
 		throw new BadRequestError("User already exists");
@@ -71,7 +70,6 @@ const login = async (payload: { email: string; password: string }) => {
 };
 const me = async () => {};
 
-// private helper functions
 const createUser = async (payload: {
 	name: string;
 	email: string;

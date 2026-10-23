@@ -3,12 +3,6 @@ import { z } from "zod";
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 128;
 
-/**
- * Password schema for account creation and password changes.
- *
- * Requires at least one lowercase letter, one uppercase letter, one number,
- * and one special character. Passwords are never trimmed or lowercased.
- */
 export const passwordSchema = z
 	.string({ error: "Password must be a string" })
 	.min(PASSWORD_MIN_LENGTH, {
@@ -33,12 +27,6 @@ export const passwordSchema = z
 		error: "Password must not contain spaces",
 	});
 
-/**
- * Confirms that a password and its confirmation match.
- *
- * Attach this to the object that owns the password fields, for example:
- * `z.object({ password: passwordSchema, confirmPassword: z.string() }).pipe(...)`.
- */
 export const passwordsMatch = <
 	T extends { password: string; confirmPassword: string },
 >(

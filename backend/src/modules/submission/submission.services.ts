@@ -179,8 +179,6 @@ const listSubmissions = async (
 	const filters: SubmissionFilters = {};
 
 	if (user.role === "REVIEWER") {
-		// Reviewers only see submissions assigned to them, regardless of any
-		// reviewer filter supplied by the client.
 		filters.reviewerId = user.id;
 	} else {
 		if (query.studentId) {

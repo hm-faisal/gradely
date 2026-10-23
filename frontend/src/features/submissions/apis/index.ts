@@ -39,11 +39,6 @@ const buildQuery = (params: QueryParams): string => {
   return searchParams.toString();
 };
 
-/**
- * Requests a backend endpoint on behalf of the signed-in user, forwarding the
- * httpOnly access token cookie. Returns `null` when the request fails so the
- * dashboard can render its empty/fallback states instead of crashing.
- */
 const requestApi = async <T>(
   endpoint: string,
 ): Promise<ApiResult<T> | null> => {
@@ -134,8 +129,6 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
 
   if (user) return user;
 
-  // The profile endpoint may be unavailable while the access token is still
-  // valid. Fall back to the token payload so the shell stays usable.
   const token = await readAccessToken();
 
   if (!token) return null;
@@ -174,7 +167,6 @@ export const getMyFeedback = cache(
   },
 );
 
-/** Fetches every submission, for dashboard summaries and charts. */
 export const getAllMySubmissions = cache(
   async (): Promise<Submission[]> => getAllSubmissions(),
 );

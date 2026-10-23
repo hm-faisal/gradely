@@ -15,11 +15,6 @@ const DURATION_UNITS: Record<string, number> = {
 	w: 7 * 24 * 60 * 60 * 1000,
 };
 
-/**
- * Converts a jsonwebtoken-style duration ("15m", "7d", "1h") to milliseconds
- * for the cookie `Max-Age` attribute. Returns `undefined` for invalid values so
- * the cookie falls back to a browser-session cookie.
- */
 const durationToMs = (duration: string): number | undefined => {
 	const match = /^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d|w)?$/i.exec(duration.trim());
 
@@ -46,9 +41,6 @@ const createCookieOptions = (maxAge?: number): CookieOptions => ({
 	...(maxAge !== undefined ? { maxAge } : {}),
 });
 
-/**
- * Stores the access and refresh tokens in httpOnly cookies.
- */
 export const setAuthCookies = (
 	res: Response,
 	tokens: { accessToken: string; refreshToken: string },

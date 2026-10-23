@@ -181,13 +181,11 @@ export const getMyReviewCounts = cache(
   },
 );
 
-/** Fetches every assigned submission, for dashboard summaries. */
 export const getAllMyAssignedSubmissions = cache(
   async (reviewerId: string): Promise<Submission[]> =>
     getAllPages({ reviewerId, status: "PENDING" }),
 );
 
-/** Fetches every reviewed submission, for dashboard summaries. */
 export const getAllMyReviewedSubmissions = cache(
   async (reviewerId: string): Promise<Submission[]> =>
     getAllPages({ reviewerId, reviewed: true }),

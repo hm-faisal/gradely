@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { validateWith } from "./utils";
 
-/** A person's name: trimmed and 2-255 characters. */
 export const nameSchema = z
   .string({ error: "Name is required" })
   .trim()

@@ -17,10 +17,6 @@ type DashboardContentSkeletonProps = {
 	footerCard?: boolean;
 };
 
-/**
- * Content-only skeleton used inside a dashboard layout, where the navbar and
- * sidebar are already rendered by the surrounding layout.
- */
 export const DashboardContentSkeleton = ({
 	stats = 4,
 	statColumns = 4,
@@ -97,10 +93,6 @@ export const DashboardContentSkeleton = ({
 	</section>
 );
 
-/**
- * Full shell skeleton for route segments that do not render a dashboard layout
- * while loading.
- */
 export const DashboardShellSkeleton = () => (
 	<section
 		aria-busy="true"

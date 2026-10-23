@@ -9,7 +9,6 @@ export const metadata: Metadata = {
     "Review student submissions, leave feedback, and track your review activity.",
 };
 
-// The reviewer workspace reads the session and live data on every request.
 export const instant = false;
 
 const ReviewerLayout = ({ children }: { children: ReactNode }) => {

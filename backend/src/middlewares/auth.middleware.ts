@@ -36,17 +36,9 @@ const extractBearerToken = (req: Request): string | undefined => {
 	return token;
 };
 
-/**
- * Reads the access token from the httpOnly cookie first, then falls back to
- * the Authorization Bearer header.
- */
 const extractAccessToken = (req: Request): string | undefined =>
 	extractCookieToken(req) ?? extractBearerToken(req);
 
-/**
- * Verifies the access token (cookie preferred over the Bearer header) and
- * attaches its payload to `req.user`.
- */
 export const authenticate: RequestHandler = catchAsync((req, _res, next) => {
 	const token = extractAccessToken(req);
 
@@ -58,9 +50,6 @@ export const authenticate: RequestHandler = catchAsync((req, _res, next) => {
 	next();
 });
 
-/**
- * Restricts a route to the supplied roles. Must run after `authenticate`.
- */
 export const authorize =
 	(...roles: UserRole[]): RequestHandler =>
 	(req, _res, next) => {
@@ -79,9 +68,6 @@ export const authorize =
 		next();
 	};
 
-/**
- * Returns the authenticated user or throws if `authenticate` did not run.
- */
 export const requireUser = (req: Request): AccessTokenPayload => {
 	if (!req.user) {
 		throw new UnauthorizedError("Authentication required");

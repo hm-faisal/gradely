@@ -59,11 +59,6 @@ export type GitHubRepoReference = {
 	path: string[];
 };
 
-/**
- * Parses a GitHub repository URL into the reference needed to call the GitHub
- * REST API. Non-GitHub repositories return `null`, so callers can fall back to
- * a plain repository link.
- */
 export const getGitHubRepoReference = (
 	repoUrl: string,
 ): GitHubRepoReference | null => {
@@ -176,12 +171,6 @@ export type MonthlyActivity = {
 	counts: Record<SubmissionStatus, number>;
 };
 
-/**
- * Builds a month-by-month activity series for the last `months` calendar
- * months, including the current one. Dates are handled in UTC so the chart is
- * stable across server time zones. `now` is passed in explicitly so callers
- * control when the current time is read during rendering.
- */
 export const getMonthlyActivity = (
 	submissions: Submission[],
 	now: Date,

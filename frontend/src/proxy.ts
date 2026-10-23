@@ -8,8 +8,6 @@ import {
 } from "@/constants/routes.constants";
 import { getSessionUser } from "@/lib/auth";
 
-// Optimistically routes users to the dashboard that matches their role based on
-// the token payload. The backend still enforces every data operation.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const user = getSessionUser(request);
@@ -21,7 +19,6 @@ export function proxy(request: NextRequest) {
     pathname === STUDENT_PATH || pathname.startsWith(`${STUDENT_PATH}/`);
 
   if (!user) {
-    // The home page is the public entry point (login/register).
     if (pathname === HOME_PATH) {
       return NextResponse.next();
     }
@@ -31,7 +28,6 @@ export function proxy(request: NextRequest) {
 
   const roleHome = getRoleHome(user.role);
 
-  // Signed-in users have no reason to see the auth page.
   if (pathname === HOME_PATH) {
     return NextResponse.redirect(new URL(roleHome, request.url));
   }

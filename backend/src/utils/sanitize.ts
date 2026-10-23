@@ -1,34 +1,20 @@
 import { z } from "zod";
 
-/**
- * Strips dangerous HTML tags, inline event handlers, and script executions from a string.
- */
 export const sanitizeString = (input: string): string => {
 	if (typeof input !== "string") return input;
 
-	return (
-		input
-			// Strip null bytes
-			.replace(/\0/g, "")
-			// Strip script tags and content within
-			.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-			// Strip iframe, embed, object tags
-			.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "")
-			.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, "")
-			.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, "")
-			// Strip inline on* event handlers
-			.replace(/\bon\w+\s*=\s*(['"]).*?\1/gi, "")
-			.replace(/\bon\w+\s*=\s*[^\s>]+/gi, "")
-			// Strip javascript: / vbscript: pseudo protocols
-			.replace(/(javascript|vbscript|data):/gi, "$1_disarmed:")
-			// Trim whitespace
-			.trim()
-	);
+	return input
+		.replace(/\0/g, "")
+		.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+		.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "")
+		.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, "")
+		.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, "")
+		.replace(/\bon\w+\s*=\s*(['"]).*?\1/gi, "")
+		.replace(/\bon\w+\s*=\s*[^\s>]+/gi, "")
+		.replace(/(javascript|vbscript|data):/gi, "$1_disarmed:")
+		.trim();
 };
 
-/**
- * Recursively sanitizes an object, preventing Prototype Pollution and stripping harmful HTML.
- */
 export const sanitizeObject = <T>(data: T): T => {
 	if (data === null || data === undefined) {
 		return data;
@@ -47,7 +33,6 @@ export const sanitizeObject = <T>(data: T): T => {
 		for (const [key, value] of Object.entries(
 			data as Record<string, unknown>,
 		)) {
-			// Prevent prototype pollution attacks
 			if (key === "__proto__" || key === "constructor" || key === "prototype") {
 				continue;
 			}
@@ -60,9 +45,6 @@ export const sanitizeObject = <T>(data: T): T => {
 	return data;
 };
 
-/**
- * Reusable Zod helper for sanitized, trimmed strings
- */
 export const sanitizedString = (minLength = 1, maxLength?: number) => {
 	const base = z
 		.string()

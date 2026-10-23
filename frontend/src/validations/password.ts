@@ -5,10 +5,6 @@ import {
 } from "../constants/auth.constants";
 import { validateWith } from "./utils";
 
-/**
- * Login only checks that a password is present and within the API limit.
- * Strength rules are enforced on registration and password changes.
- */
 export const loginPasswordSchema = z
 	.string({ error: "Password is required" })
 	.min(1, { error: "Password is required" })
@@ -16,11 +12,6 @@ export const loginPasswordSchema = z
 		error: `Password must be at most ${PASSWORD_MAX_LENGTH} characters`,
 	});
 
-/**
- * Password schema for account creation and password changes. Requires at
- * least one lowercase letter, one uppercase letter, one number, and one
- * special character. Passwords are never trimmed or lowercased.
- */
 export const passwordSchema = z
 	.string({ error: "Password is required" })
 	.min(1, { error: "Password is required" })
@@ -44,7 +35,6 @@ export const passwordSchema = z
 		error: "Password must contain at least one special character",
 	});
 
-/** Confirms that a password and its confirmation match. */
 export function createConfirmPasswordSchema(password: string) {
 	return z
 		.string({ error: "Please confirm your password" })
@@ -69,7 +59,6 @@ export function validateConfirmPassword(
 	return validateWith(createConfirmPasswordSchema(password), confirmPassword);
 }
 
-/** Returns a score from 0 (very weak) to 4 (strong). */
 export function getPasswordStrength(value: string): number {
 	const checks = [
 		value.length >= PASSWORD_MIN_LENGTH,

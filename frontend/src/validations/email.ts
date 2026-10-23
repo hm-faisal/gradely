@@ -2,10 +2,6 @@ import { z } from "zod";
 import { EMAIL_MAX_LENGTH } from "../constants/auth.constants";
 import { validateWith } from "./utils";
 
-/**
- * Normalized email schema: trimmed, validated, then lowercased so the same
- * address always maps to the same value. Mirrors `backend/src/schemas`.
- */
 export const emailSchema = z
 	.string({ error: "Email is required" })
 	.trim()

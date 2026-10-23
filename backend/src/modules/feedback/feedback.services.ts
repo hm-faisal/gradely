@@ -105,8 +105,6 @@ const updateFeedback = async (id: string, payload: UpdateFeedbackInput) => {
 		content: payload.content,
 	});
 
-	// Keep the denormalized feedback on the submission in sync so students see
-	// the same content as administrators.
 	await db.orm.public.Submission.where({ id: existing.submissionId }).update({
 		feedback: payload.content,
 	});

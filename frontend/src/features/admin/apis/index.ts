@@ -193,7 +193,6 @@ export const getAdminUsers = cache(
   },
 );
 
-/** Fetches every user matching the role, for dropdowns and summaries. */
 export const getAllAdminUsers = cache(
   async (role?: UserRole): Promise<AdminUser[]> =>
     getAllPages<AdminUser>("users", role ? { role } : {}),
