@@ -6,6 +6,7 @@ import {
 } from "../../middlewares/validateRequest.middleware";
 import { submissionController } from "./submission.controllers";
 import {
+	assignReviewerSchema,
 	createSubmissionSchema,
 	listMySubmissionsQuerySchema,
 	listSubmissionsQuerySchema,
@@ -26,7 +27,7 @@ router.post(
 router.get(
 	"/",
 	authenticate,
-	authorize("ADMIN"),
+	authorize("ADMIN", "REVIEWER"),
 	validateQuery(listSubmissionsQuerySchema),
 	submissionController.listSubmissions,
 );
@@ -39,10 +40,25 @@ router.get(
 	submissionController.listMySubmissions,
 );
 
+router.post(
+	"/auto-assign",
+	authenticate,
+	authorize("ADMIN"),
+	submissionController.autoAssignReviewers,
+);
+
+router.patch(
+	"/:id/assign",
+	authenticate,
+	authorize("ADMIN"),
+	validateRequest(assignReviewerSchema),
+	submissionController.assignReviewer,
+);
+
 router.patch(
 	"/:id/review",
 	authenticate,
-	authorize("ADMIN"),
+	authorize("ADMIN", "REVIEWER"),
 	validateRequest(reviewSubmissionSchema),
 	submissionController.reviewSubmission,
 );

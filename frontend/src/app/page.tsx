@@ -1,4 +1,4 @@
-import { AuthCard } from "@/features/auth/components/auth.card";
+import { AuthCard } from "@/features/auth/components/Auth.card";
 import { CircleCheck, GraduationCap, ShieldCheck, Zap } from "lucide-react";
 
 const highlights = [

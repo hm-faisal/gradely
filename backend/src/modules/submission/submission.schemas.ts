@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+	booleanQuerySchema,
+	createPaginationSchema,
+} from "../../schemas/pagination.schema";
 import { createStringSchema } from "../../schemas/string.schema";
 import { sanitizeString } from "../../utils/sanitize";
 
@@ -74,20 +78,35 @@ export const reviewSubmissionSchema = z
 		path: ["feedback"],
 	});
 
-export const listSubmissionsQuerySchema = z.object({
-	page: z.coerce.number().int().min(1).default(1),
-	limit: z.coerce.number().int().min(1).max(100).default(10),
-	status: submissionStatusSchema.optional(),
-	studentId: z.string().trim().min(1).optional(),
+export const assignReviewerSchema = z.object({
+	reviewerId: z
+		.string({ error: "Reviewer is required" })
+		.trim()
+		.min(1, { error: "Reviewer is required" }),
 });
 
-export const listMySubmissionsQuerySchema = listSubmissionsQuerySchema.omit({
-	studentId: true,
+export const listSubmissionsQuerySchema = createPaginationSchema(10).extend({
+	status: submissionStatusSchema.optional(),
+	studentId: z.string().trim().min(1).optional(),
+	reviewerId: z.string().trim().min(1).optional(),
+	/** Only submissions that have (or have not) been reviewed. */
+	reviewed: booleanQuerySchema.optional(),
+	/** Only submissions with (or without) feedback attached. */
+	hasFeedback: booleanQuerySchema.optional(),
+	/** Only pending submissions with (or without) an assigned reviewer. */
+	unassigned: booleanQuerySchema.optional(),
+});
+
+export const listMySubmissionsQuerySchema = createPaginationSchema(10).extend({
+	status: submissionStatusSchema.optional(),
+	reviewed: booleanQuerySchema.optional(),
+	hasFeedback: booleanQuerySchema.optional(),
 });
 
 export type CreateSubmissionInput = z.infer<typeof createSubmissionSchema>;
 export type UpdateSubmissionInput = z.infer<typeof updateSubmissionSchema>;
 export type ReviewSubmissionInput = z.infer<typeof reviewSubmissionSchema>;
+export type AssignReviewerInput = z.infer<typeof assignReviewerSchema>;
 export type ListSubmissionsQuery = z.infer<typeof listSubmissionsQuerySchema>;
 export type ListMySubmissionsQuery = z.infer<
 	typeof listMySubmissionsQuerySchema

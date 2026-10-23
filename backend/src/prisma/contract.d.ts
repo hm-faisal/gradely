@@ -18,9 +18,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'c483accf0de0f0be13e33e8533dc6a0a8a2a70eae5db6844f4651713214d621b'>;
+  StorageHashBase<'27061e711bfb6d260bbe828b6fa88ad77c2d88693b1d5aa1777ebb32921bc197'>;
 export type ExecutionHash =
-  ExecutionHashBase<'4c049b57cbca59c5e5e9e231e8ba08b44652fbd777b843a8c413ead1db5e5ec3'>;
+  ExecutionHashBase<'5b5c69ed26ee5dc1962ffebe779752eeb65697685f7999a783d08867344a0b3a'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -234,6 +234,14 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
+    readonly Feedback: {
+      readonly content: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly reviewerId: CodecTypes['pg/text@1']['output'];
+      readonly submissionId: CodecTypes['pg/text@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly Submission: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly description: CodecTypes['pg/text@1']['output'];
@@ -254,7 +262,7 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly password: CodecTypes['pg/text@1']['output'];
-      readonly role: 'STUDENT' | 'ADMIN';
+      readonly role: 'STUDENT' | 'ADMIN' | 'REVIEWER';
       readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -262,6 +270,14 @@ export type FieldOutputTypes = {
 };
 export type FieldInputTypes = {
   readonly public: {
+    readonly Feedback: {
+      readonly content: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly reviewerId: CodecTypes['pg/text@1']['input'];
+      readonly submissionId: CodecTypes['pg/text@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
     readonly Submission: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly description: CodecTypes['pg/text@1']['input'];
@@ -282,7 +298,7 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly password: CodecTypes['pg/text@1']['input'];
-      readonly role: 'STUDENT' | 'ADMIN';
+      readonly role: 'STUDENT' | 'ADMIN' | 'REVIEWER';
       readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -290,6 +306,14 @@ export type FieldInputTypes = {
 };
 export type StorageColumnTypes = {
   readonly public: {
+    readonly Feedback: {
+      readonly content: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly reviewerId: CodecTypes['pg/text@1']['output'];
+      readonly submissionId: CodecTypes['pg/text@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly Submission: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly description: CodecTypes['pg/text@1']['output'];
@@ -310,7 +334,7 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly password: CodecTypes['pg/text@1']['output'];
-      readonly role: 'STUDENT' | 'ADMIN';
+      readonly role: 'STUDENT' | 'ADMIN' | 'REVIEWER';
       readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -318,6 +342,14 @@ export type StorageColumnTypes = {
 };
 export type StorageColumnInputTypes = {
   readonly public: {
+    readonly Feedback: {
+      readonly content: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly reviewerId: CodecTypes['pg/text@1']['input'];
+      readonly submissionId: CodecTypes['pg/text@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
     readonly Submission: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly description: CodecTypes['pg/text@1']['input'];
@@ -338,7 +370,7 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly password: CodecTypes['pg/text@1']['input'];
-      readonly role: 'STUDENT' | 'ADMIN';
+      readonly role: 'STUDENT' | 'ADMIN' | 'REVIEWER';
       readonly status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -346,6 +378,17 @@ export type StorageColumnInputTypes = {
 };
 
 export namespace Models {
+  export type public_Feedback = {
+    content: CodecTypes['pg/text@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    reviewerId: CodecTypes['pg/text@1']['output'];
+    submissionId: CodecTypes['pg/text@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    reviewer: public_User;
+    submission: public_Submission;
+    readonly [RelationKeys]?: 'reviewer' | 'submission';
+  };
   export type public_Submission = {
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     description: CodecTypes['pg/text@1']['output'];
@@ -359,9 +402,10 @@ export namespace Models {
     status: 'PENDING' | 'APPROVED' | 'REJECTED';
     studentId: CodecTypes['pg/text@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    reviewFeedback: public_Feedback | null;
     reviewer: public_User | null;
     student: public_User;
-    readonly [RelationKeys]?: 'reviewer' | 'student';
+    readonly [RelationKeys]?: 'reviewFeedback' | 'reviewer' | 'student';
   };
   export type public_User = {
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -369,17 +413,19 @@ export namespace Models {
     id: CodecTypes['pg/text@1']['output'];
     name: CodecTypes['pg/text@1']['output'];
     password: CodecTypes['pg/text@1']['output'];
-    role: 'STUDENT' | 'ADMIN';
+    role: 'STUDENT' | 'ADMIN' | 'REVIEWER';
     status: 'ACTIVE' | 'INACTIVE' | 'BANNED' | 'DELETED';
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    feedbacks: public_Feedback[];
     reviewed: public_Submission[];
     submissions: public_Submission[];
-    readonly [RelationKeys]?: 'reviewed' | 'submissions';
+    readonly [RelationKeys]?: 'feedbacks' | 'reviewed' | 'submissions';
   };
 }
 
 export declare const models: {
   public: {
+    Feedback: Models.public_Feedback;
     Submission: Models.public_Submission;
     User: Models.public_User;
   };
@@ -403,6 +449,89 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly Feedback: {
+              columns: {
+                readonly content: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly reviewerId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly submissionId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['submissionId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'Feedback_reviewerId_createdAt_idx_448c968e';
+                  readonly prefix: 'Feedback_reviewerId_createdAt_idx';
+                  readonly columns: readonly ['reviewerId', 'createdAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Feedback_reviewerId_idx_25a27b4e';
+                  readonly prefix: 'Feedback_reviewerId_idx';
+                  readonly columns: readonly ['reviewerId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Feedback';
+                    readonly columns: readonly ['submissionId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Submission';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Feedback';
+                    readonly columns: readonly ['reviewerId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'User';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly Submission: {
               columns: {
                 readonly createdAt: {
@@ -604,7 +733,7 @@ type ContractBase = Omit<
           readonly valueSet: {
             readonly Role: {
               readonly kind: 'valueSet';
-              readonly values: readonly ['STUDENT', 'ADMIN'];
+              readonly values: readonly ['STUDENT', 'ADMIN', 'REVIEWER'];
             };
             readonly SubmissionStatus: {
               readonly kind: 'valueSet';
@@ -625,6 +754,7 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
+    readonly Feedback: { readonly namespace: 'public' & NamespaceId; readonly model: 'Feedback' };
     readonly Submission: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'Submission';
@@ -635,6 +765,75 @@ type ContractBase = Omit<
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly Feedback: {
+            readonly fields: {
+              readonly content: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly reviewerId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly submissionId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly reviewer: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['reviewerId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly submission: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Submission';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['submissionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Feedback';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly content: { readonly column: 'content' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly reviewerId: { readonly column: 'reviewerId' };
+                readonly submissionId: { readonly column: 'submissionId' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
           readonly Submission: {
             readonly fields: {
               readonly createdAt: {
@@ -696,6 +895,18 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly reviewFeedback: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Feedback';
+                };
+                readonly cardinality: '1:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['submissionId'];
+                };
+              };
               readonly reviewer: {
                 readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
                 readonly cardinality: 'N:1';
@@ -776,6 +987,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly feedbacks: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Feedback';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['reviewerId'];
+                };
+              };
               readonly reviewed: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -821,6 +1043,7 @@ type ContractBase = Omit<
             readonly members: readonly [
               { readonly name: 'STUDENT'; readonly value: 'STUDENT' },
               { readonly name: 'ADMIN'; readonly value: 'ADMIN' },
+              { readonly name: 'REVIEWER'; readonly value: 'REVIEWER' },
             ];
           };
           readonly SubmissionStatus: {
@@ -876,6 +1099,23 @@ type ContractBase = Omit<
     readonly executionHash: ExecutionHash;
     readonly mutations: {
       readonly defaults: readonly [
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Feedback';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'Feedback';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
         {
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {

@@ -1,4 +1,5 @@
 import { toast } from "@/components/ui/toast";
+import { getRoleHome } from "@/constants/routes.constants";
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
 import { loginAction } from "../actions/login.action";
@@ -31,12 +32,12 @@ export const useLogin = () => {
 				return;
 			}
 
+			router.push(getRoleHome(result.user.role));
 			toast.add({
 				title: "Login Success",
 				description: `Welcome back, ${result.user.name}!`,
 				type: "success",
 			});
-			router.push("/me");
 		},
 	});
 

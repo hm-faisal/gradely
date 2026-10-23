@@ -1,0 +1,329 @@
+[
+  {
+    "id": "dropCheckConstraint.User.User_role_check_482f18a5",
+    "label": "Drop check constraint \"User_role_check_482f18a5\" on \"User\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "User_role_check_482f18a5",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"User_role_check_482f18a5\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_482f18a5",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"User_role_check_482f18a5\"",
+        "sql": "ALTER TABLE \"public\".\"User\" DROP CONSTRAINT \"User_role_check_482f18a5\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"User_role_check_482f18a5\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_482f18a5",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.Feedback",
+    "label": "Create table \"Feedback\"",
+    "summary": "Creates table \"Feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Feedback\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Feedback\"",
+        "sql": "CREATE TABLE \"public\".\"Feedback\" (\n  \"content\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"reviewerId\" text NOT NULL,\n  \"submissionId\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Feedback\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Feedback.Feedback_submissionId_key",
+    "label": "Add unique constraint on \"Feedback\" (submissionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Feedback_submissionId_key",
+        "table": "Feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Feedback_submissionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Feedback_submissionId_key",
+          "public",
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Feedback_submissionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"Feedback\" ADD CONSTRAINT \"Feedback_submissionId_key\" UNIQUE (\"submissionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"Feedback_submissionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Feedback_submissionId_key",
+          "public",
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.User.User_role_check_08578c34",
+    "label": "Add check constraint \"User_role_check_08578c34\" on \"User\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "User_role_check_08578c34",
+        "table": "User"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"User_role_check_08578c34\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_08578c34",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"User_role_check_08578c34\"",
+        "sql": "ALTER TABLE \"public\".\"User\" ADD CONSTRAINT \"User_role_check_08578c34\" CHECK (\"role\" IN ('STUDENT', 'ADMIN', 'REVIEWER'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"User_role_check_08578c34\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "User_role_check_08578c34",
+          "public",
+          "\"public\".\"User\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Feedback.Feedback_reviewerId_createdAt_idx_448c968e",
+    "label": "Create index \"Feedback_reviewerId_createdAt_idx_448c968e\" on \"Feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Feedback_reviewerId_createdAt_idx_448c968e",
+        "table": "Feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Feedback_reviewerId_createdAt_idx_448c968e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Feedback_reviewerId_createdAt_idx_448c968e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Feedback_reviewerId_createdAt_idx_448c968e\"",
+        "sql": "CREATE INDEX \"Feedback_reviewerId_createdAt_idx_448c968e\" ON \"public\".\"Feedback\" (\"reviewerId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Feedback_reviewerId_createdAt_idx_448c968e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Feedback_reviewerId_createdAt_idx_448c968e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Feedback.Feedback_reviewerId_idx_25a27b4e",
+    "label": "Create index \"Feedback_reviewerId_idx_25a27b4e\" on \"Feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Feedback_reviewerId_idx_25a27b4e",
+        "table": "Feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Feedback_reviewerId_idx_25a27b4e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Feedback_reviewerId_idx_25a27b4e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Feedback_reviewerId_idx_25a27b4e\"",
+        "sql": "CREATE INDEX \"Feedback_reviewerId_idx_25a27b4e\" ON \"public\".\"Feedback\" (\"reviewerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Feedback_reviewerId_idx_25a27b4e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Feedback_reviewerId_idx_25a27b4e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Feedback.Feedback_submissionId_fkey",
+    "label": "Add foreign key \"Feedback_submissionId_fkey\" on \"Feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Feedback_submissionId_fkey",
+        "table": "Feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Feedback_submissionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Feedback_submissionId_fkey",
+          "public",
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Feedback_submissionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Feedback\"\nADD CONSTRAINT \"Feedback_submissionId_fkey\"\nFOREIGN KEY (\"submissionId\")\nREFERENCES \"public\".\"Submission\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Feedback_submissionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Feedback_submissionId_fkey",
+          "public",
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Feedback.Feedback_reviewerId_fkey",
+    "label": "Add foreign key \"Feedback_reviewerId_fkey\" on \"Feedback\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Feedback_reviewerId_fkey",
+        "table": "Feedback"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Feedback_reviewerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Feedback_reviewerId_fkey",
+          "public",
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Feedback_reviewerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Feedback\"\nADD CONSTRAINT \"Feedback_reviewerId_fkey\"\nFOREIGN KEY (\"reviewerId\")\nREFERENCES \"public\".\"User\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Feedback_reviewerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Feedback_reviewerId_fkey",
+          "public",
+          "\"public\".\"Feedback\""
+        ]
+      }
+    ]
+  }
+]

@@ -5,6 +5,7 @@ import { requireUser } from "../../middlewares/auth.middleware";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import type {
+	AssignReviewerInput,
 	CreateSubmissionInput,
 	ListMySubmissionsQuery,
 	ListSubmissionsQuery,
@@ -112,6 +113,33 @@ const reviewSubmission = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const assignReviewer = catchAsync(async (req: Request, res: Response) => {
+	const id = getParamId(req);
+	const payload = req.body as AssignReviewerInput;
+	const data = await submissionService.assignReviewer(id, payload.reviewerId);
+
+	sendResponse(res, {
+		success: true,
+		statusCode: httpStatus.OK,
+		message: "Reviewer assigned successfully",
+		data,
+	});
+});
+
+const autoAssignReviewers = catchAsync(async (_req: Request, res: Response) => {
+	const data = await submissionService.autoAssignReviewers();
+
+	sendResponse(res, {
+		success: true,
+		statusCode: httpStatus.OK,
+		message:
+			data.assigned > 0
+				? `${data.assigned} submission(s) auto-assigned to reviewers`
+				: "No unassigned pending submissions found",
+		data,
+	});
+});
+
 const deleteSubmission = catchAsync(async (req: Request, res: Response) => {
 	const authUser = requireUser(req);
 	const id = getParamId(req);
@@ -132,5 +160,7 @@ export const submissionController = {
 	getSubmission,
 	updateSubmission,
 	reviewSubmission,
+	assignReviewer,
+	autoAssignReviewers,
 	deleteSubmission,
 };

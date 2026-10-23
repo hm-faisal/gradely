@@ -1,5 +1,7 @@
 import { Router } from "express";
+import { adminRoutes } from "../modules/admin/admin.routes";
 import { authRoutes } from "../modules/auth/auth.routes";
+import { feedbackRoutes } from "../modules/feedback/feedback.routes";
 import { submissionRoutes } from "../modules/submission/submission.routes";
 import { userRoutes } from "../modules/user/user.routes";
 
@@ -22,6 +24,14 @@ const moduleRoutes: ModuleRoute[] = [
 	{
 		path: "/submissions",
 		route: submissionRoutes,
+	},
+	{
+		path: "/feedbacks",
+		route: feedbackRoutes,
+	},
+	{
+		path: "/admin",
+		route: adminRoutes,
 	},
 ];
 

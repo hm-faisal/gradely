@@ -33,12 +33,12 @@ export const useRegister = () => {
 				return;
 			}
 
+			router.push("/me");
 			toast.add({
 				title: "Registration Success",
 				description: `Welcome, ${result.user.name}!`,
 				type: "success",
 			});
-			router.push("/me");
 		},
 	});
 

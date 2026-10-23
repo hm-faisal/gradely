@@ -2,6 +2,7 @@
 enum Role {
   STUDENT = "STUDENT"
   ADMIN = "ADMIN"
+  REVIEWER = "REVIEWER"
 }
 
 enum UserStatus {
@@ -26,6 +27,7 @@ model User {
   status      UserStatus                 @default(ACTIVE)
   submissions Submission[]               @relation("StudentSubmissions")
   reviewed    Submission[]               @relation("ReviewedBy")
+  feedbacks   Feedback[]                 @relation("ReviewerFeedbacks")
   createdAt   TimestamptzString          @default(now())
   updatedAt   temporal.updatedAtString()
 }
@@ -46,9 +48,27 @@ model Submission {
   reviewer    User?                      @relation("ReviewedBy", fields: [reviewerId], references: [id])
   reviewedAt  TimestamptzString?
 
+  reviewFeedback Feedback?
+
   createdAt   TimestamptzString          @default(now())
   updatedAt   temporal.updatedAtString()
 
   @@unique([studentId, projectName])
   @@index([status, createdAt])
+}
+
+model Feedback {
+  id           String                     @id @default(uuid())
+  content      String
+
+  submissionId String                     @unique
+  submission   Submission                 @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  reviewerId   String
+  reviewer     User                       @relation("ReviewerFeedbacks", fields: [reviewerId], references: [id])
+
+  createdAt    TimestamptzString          @default(now())
+  updatedAt    temporal.updatedAtString()
+
+  @@index([reviewerId, createdAt])
 }

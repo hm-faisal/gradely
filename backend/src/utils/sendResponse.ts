@@ -1,18 +1,12 @@
 import type { Response } from "express";
-
-type TMeta = {
-	page: number;
-	limit: number;
-	total: number;
-	totalPages: number;
-};
+import type { PaginationMeta } from "./pagination";
 
 type TResponseData<T> = {
 	success: boolean;
 	statusCode: number;
 	message: string;
 	data: T;
-	meta?: TMeta;
+	meta?: PaginationMeta;
 };
 
 export const sendResponse = <T>(res: Response, data: TResponseData<T>) => {
