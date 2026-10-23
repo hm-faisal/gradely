@@ -9,12 +9,15 @@ import morgan from "morgan";
 import { envConfig } from "../config/env.config";
 import { globalErrorHandler } from "../middlewares/globalErrorHandler.middleware";
 import { notFoundHandler } from "../middlewares/notFound.middleware";
+import { apiRateLimiter } from "../middlewares/rateLimiter.middleware";
 import { sanitizeInput } from "../middlewares/sanitize.middleware";
 import { healthRoutes } from "../modules/health/health.routes";
 import appRoutes from "../routes";
 
 export const createApp = (): Application => {
 	const app = express();
+
+	app.set("trust proxy", 1);
 
 	app.use(
 		cors({
@@ -41,6 +44,7 @@ export const createApp = (): Application => {
 	});
 
 	app.use("/health", healthRoutes);
+	app.use("/api/v1", apiRateLimiter);
 	app.use("/api/v1", appRoutes);
 
 	app.use(notFoundHandler);

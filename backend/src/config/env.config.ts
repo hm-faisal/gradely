@@ -9,4 +9,7 @@ export const envConfig = {
 	JWT_REFRESH_TOKEN_EXPIRY: getEnv("JWT_REFRESH_TOKEN_EXPIRY", "7d"),
 	DATABASE_URL: getEnv("DATABASE_URL"),
 	CORS_ORIGIN: getEnv("CORS_ORIGIN", "http://localhost:3000"),
+	RATE_LIMIT_WINDOW_MS: getEnvNumber("RATE_LIMIT_WINDOW_MS", 15 * 60 * 1000),
+	RATE_LIMIT_MAX: getEnvNumber("RATE_LIMIT_MAX", 100),
+	AUTH_RATE_LIMIT_MAX: getEnvNumber("AUTH_RATE_LIMIT_MAX", 15),
 };

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../../middlewares/auth.middleware";
+import { submissionRateLimiter } from "../../middlewares/rateLimiter.middleware";
 import {
 	validateQuery,
 	validateRequest,
@@ -20,6 +21,7 @@ router.post(
 	"/",
 	authenticate,
 	authorize("STUDENT"),
+	submissionRateLimiter,
 	validateRequest(createSubmissionSchema),
 	submissionController.createSubmission,
 );

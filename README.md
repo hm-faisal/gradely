@@ -79,6 +79,7 @@ Educational and training programs frequently struggle with scattered submission 
 - **Database & ORM**: [PostgreSQL](https://www.postgresql.org/) managed via [Prisma 8](https://www.prisma.io/) (`@prisma/orm-postgres`) with contract-driven schema definitions
 - **Validation**: [Zod 4](https://zod.dev/) for request body, query parameter, and route param validation
 - **Authentication**: JWT authentication using `jsonwebtoken` stored in `httpOnly` secure cookies with `Authorization: Bearer` fallback
+- **Rate Limiting & DoS Protection**: [express-rate-limit](https://express-rate-limit.github.io/) with tiered limits (global API window, strict authentication attempt throttling, and submission spam defense)
 - **Security Middlewares**: Custom input sanitization against Prototype Pollution (`__proto__`, `constructor`, `prototype`), null-byte injection, XSS tag stripping, CORS, and `cookie-parser`
 - **Compiler & Tools**: `tsx` for live development execution, `tsdown` and `typescript` for type checking and compilation
 
@@ -108,6 +109,7 @@ Gradely/
 │   │   ├── middlewares/
 │   │   │   ├── auth.middleware.ts          # JWT authentication & RBAC authorization
 │   │   │   ├── globalErrorHandler.ts       # Centralized error handler & status mapper
+│   │   │   ├── rateLimiter.middleware.ts   # Tiered express-rate-limiters (API, auth, submissions)
 │   │   │   ├── sanitize.middleware.ts      # Prototype pollution & XSS sanitization
 │   │   │   └── validateRequest.ts          # Zod schema validation middleware
 │   │   ├── modules/
@@ -174,6 +176,11 @@ Gradely/
 4. **Multi-Tenant Pagination Engine**:
    - Standardized `offset` and `limit` pagination schema across all listing routes with enforced bounds (`limit` capped at 100).
    - Dynamic search parameter serialization that maintains active filters and resets navigation offset when applying search queries.
+
+5. **Spam & Abuse Rate Limiting**:
+   - Integrated `express-rate-limit` with draft-8 headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`).
+   - Global rate limiter (100 req/15 min) for general API endpoints, strict auth rate limiter (15 req/15 min) preventing brute force on login/registration, and creation limiter (30 req/15 min) for submissions.
+   - Uptime probes (`/health`, `/`) remain unthrottled.
 
 ---
 
@@ -287,6 +294,9 @@ cd Gradely
 | `ADMIN_NAME` | String | `Gradely Admin` | Display name for seeded administrator |
 | `ADMIN_EMAIL` | String | `admin@gradely.com` | Email address for seeded administrator |
 | `ADMIN_PASSWORD` | String | `Admin@12345` | Password for seeded administrator |
+| `RATE_LIMIT_WINDOW_MS` | Number | `900000` | Rate limit window duration in milliseconds (15 min) |
+| `RATE_LIMIT_MAX` | Number | `100` | Maximum requests per IP within the window |
+| `AUTH_RATE_LIMIT_MAX` | Number | `15` | Maximum auth attempts (login/register) per IP per window |
 
 ### Frontend Configuration (`frontend/.env`)
 
